@@ -1,0 +1,1358 @@
+<!doctype html><html lang="ja"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Billing Case Guide</title>
+<meta name="description" content="AI Platform の課金業務ケースまとめ（billing BDD より抽出）">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: docs 3 cột — sidebar điều hướng | nội dung | mục lục trang. Thu về 1 cột trên mobile. */
+:root {
+  --bg: #fbfbfd;
+  --bg-soft: #f1f3f8;
+  --bg-code: #eef0f6;
+  --fg: #1d2233;
+  --fg-muted: #5b6275;
+  --border: #dde1ea;
+  --accent: #3552c9;
+  --accent-soft: #e5eafb;
+  --ok: #1d7a4c;      --ok-bg: #e2f4ea;
+  --err: #b4312e;     --err-bg: #fbe6e5;
+  --warn: #9a6400;    --warn-bg: #fdf1d9;
+  --info: #3552c9;    --info-bg: #e5eafb;
+  --font-body: "Be Vietnam Pro", "Noto Sans JP", "Hiragino Sans", "Yu Gothic UI", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+  --nav-h: 56px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12141b; --bg-soft: #1a1d27; --bg-code: #20242f; --fg: #e3e6ef; --fg-muted: #9aa1b4;
+    --border: #2b3040; --accent: #8ea2f5; --accent-soft: #232a45;
+    --ok: #6fd3a0; --ok-bg: #173327; --err: #f08c87; --err-bg: #3a1e1f;
+    --warn: #eec26a; --warn-bg: #362b16; --info: #8ea2f5; --info-bg: #232a45;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12141b; --bg-soft: #1a1d27; --bg-code: #20242f; --fg: #e3e6ef; --fg-muted: #9aa1b4;
+  --border: #2b3040; --accent: #8ea2f5; --accent-soft: #232a45;
+  --ok: #6fd3a0; --ok-bg: #173327; --err: #f08c87; --err-bg: #3a1e1f;
+  --warn: #eec26a; --warn-bg: #362b16; --info: #8ea2f5; --info-bg: #232a45;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-padding-top: calc(var(--nav-h) + 16px); }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.7 var(--font-body); }
+a { color: var(--accent); text-underline-offset: 3px; }
+a:hover { text-decoration: none; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+code { font: 0.86em var(--font-mono); background: var(--bg-code); padding: 0.1em 0.4em; border-radius: 4px; overflow-wrap: anywhere; }
+
+/* Navbar */
+.navbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 30; height: var(--nav-h);
+  background: color-mix(in srgb, var(--bg) 85%, transparent); backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border); }
+.navbar-inner { max-width: 1440px; margin: 0 auto; height: 100%; display: flex; align-items: center; gap: 12px; padding-inline: 16px; }
+.brand { font-weight: 700; color: var(--fg); text-decoration: none; margin-right: auto; white-space: nowrap; }
+.brand span { color: var(--fg-muted); font-weight: 500; }
+.search { position: relative; }
+.search input { width: 260px; max-width: 46vw; font: 14px var(--font-body); color: var(--fg); background: var(--bg-soft);
+  border: 1px solid transparent; border-radius: 8px; padding: 6px 56px 6px 10px; }
+.search input:focus { border-color: var(--accent); outline: none; }
+.search kbd { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font: 11px var(--font-mono);
+  color: var(--fg-muted); border: 1px solid var(--border); border-radius: 4px; padding: 0 5px; background: var(--bg); }
+.icon-btn { font: 13px var(--font-body); color: var(--fg-muted); background: none; border: 1px solid var(--border);
+  border-radius: 8px; padding: 5px 10px; cursor: pointer; white-space: nowrap; }
+.icon-btn:hover { color: var(--fg); background: var(--bg-soft); }
+.menu-btn { display: none; }
+
+/* Grid 3 cột */
+.layout { max-width: 1440px; margin: 0 auto; display: grid; grid-template-columns: 260px minmax(0, 1fr) 220px; }
+.sidebar, .toc { position: sticky; top: calc(var(--nav-h) + env(safe-area-inset-top, 0px)); align-self: start;
+  height: calc(100vh - var(--nav-h)); overflow-y: auto; padding: 20px 12px; }
+.sidebar { border-right: 1px solid var(--border); }
+.side-group + .side-group { margin-top: 14px; }
+.side-title { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg); padding: 0 8px 4px; }
+.side-group .side-link { margin-left: 12px; }
+.side-link { display: block; font-size: 14px; color: var(--fg-muted); text-decoration: none; padding: 5px 8px; border-radius: 6px; line-height: 1.4; }
+.side-link:hover { background: var(--bg-soft); color: var(--fg); }
+.side-link.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.toc { font-size: 13px; }
+.toc-title { font-weight: 600; margin-bottom: 8px; }
+.toc a { display: block; color: var(--fg-muted); text-decoration: none; padding: 3px 0; line-height: 1.4; }
+.toc a:hover, .toc a.active { color: var(--accent); }
+.toc a.lv3 { padding-left: 12px; }
+
+main { min-width: 0; padding: 28px 16px 64px; }
+.content { max-width: 920px; margin: 0 auto; }
+h1 { font-size: 2.1rem; line-height: 1.25; letter-spacing: -0.02em; margin: 0 0 12px; text-wrap: balance; }
+h2 { font-size: 1.55rem; line-height: 1.3; letter-spacing: -0.01em; margin: 56px 0 14px; padding-bottom: 6px; border-bottom: 1px solid var(--border); text-wrap: balance; }
+h3 { font-size: 1.12rem; margin: 30px 0 10px; text-wrap: balance; }
+p, ul, ol { margin: 0 0 14px; }
+.content > p, .content section > p, .content section > ul, .content section > ol { max-width: 72ch; }
+li + li { margin-top: 4px; }
+.lead { font-size: 1.05rem; color: var(--fg-muted); max-width: 70ch; }
+.meta { font-size: 13px; color: var(--fg-muted); }
+
+/* Bảng */
+.table-wrap { overflow-x: auto; margin: 0 0 18px; border: 1px solid var(--border); border-radius: 10px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 1.55; }
+th, td { text-align: left; vertical-align: top; padding: 9px 12px; border-top: 1px solid var(--border); }
+thead th { border-top: 0; background: var(--bg-soft); font-weight: 600; font-size: 13px; white-space: nowrap; }
+tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--bg-soft) 45%, transparent); }
+td.id { font: 12px var(--font-mono); color: var(--fg-muted); white-space: nowrap; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+table.cases td:nth-child(2) { min-width: 220px; }
+table.cases td:nth-child(3) { min-width: 260px; }
+tr.hit td { background: var(--accent-soft) !important; }
+
+/* Badge trạng thái */
+.b { display: inline-block; font: 600 11.5px/1.5 var(--font-mono); padding: 1px 7px; border-radius: 999px; white-space: nowrap; }
+.b.ok { color: var(--ok); background: var(--ok-bg); }
+.b.err { color: var(--err); background: var(--err-bg); }
+.b.warn { color: var(--warn); background: var(--warn-bg); }
+.b.info { color: var(--info); background: var(--info-bg); }
+.b.mute { color: var(--fg-muted); background: var(--bg-soft); }
+
+/* Callout */
+.callout { display: flex; gap: 10px; padding: 12px 14px; border-radius: 10px; margin: 0 0 18px; font-size: 14px; border: 1px solid; }
+.callout > div { min-width: 0; }
+.callout strong:first-child { display: block; margin-bottom: 2px; }
+.callout.note { background: var(--info-bg); border-color: color-mix(in srgb, var(--info) 30%, transparent); }
+.callout.warn { background: var(--warn-bg); border-color: color-mix(in srgb, var(--warn) 30%, transparent); }
+.callout.future { background: var(--bg-soft); border-color: var(--border); border-style: dashed; }
+.callout p:last-child, .callout ul:last-child { margin-bottom: 0; }
+
+/* Công thức */
+.formula { font: 14px/1.7 var(--font-mono); background: var(--bg-code); border-radius: 10px; padding: 14px 16px; margin: 0 0 18px; overflow-x: auto; white-space: pre; }
+
+/* Luồng các bước */
+.flow { list-style: none; padding: 0; margin: 0 0 18px; counter-reset: step; display: grid; gap: 8px; max-width: 76ch; }
+.flow li { counter-increment: step; position: relative; padding: 8px 12px 8px 44px; border: 1px solid var(--border); border-radius: 8px; margin: 0; }
+.flow li::before { content: counter(step); position: absolute; left: 12px; top: 8px; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--accent-soft); color: var(--accent); font: 600 12px/22px var(--font-mono); text-align: center; }
+
+/* Thẻ entry-point ở trang đầu */
+.entry-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin: 0 0 18px; }
+.entry { display: block; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; text-decoration: none; color: var(--fg); }
+.entry:hover { border-color: var(--accent); }
+.entry b { display: block; color: var(--accent); font-size: 14px; }
+.entry span { font-size: 13px; color: var(--fg-muted); }
+
+.no-result { display: none; padding: 16px; border: 1px dashed var(--border); border-radius: 10px; color: var(--fg-muted); }
+section.dim { display: none; }
+.footer { margin-top: 64px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 13px; color: var(--fg-muted); }
+
+@media (max-width: 1180px) { .layout { grid-template-columns: 240px minmax(0, 1fr); } .toc { display: none; } }
+@media (max-width: 820px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .menu-btn { display: inline-block; }
+  .sidebar { display: none; position: fixed; inset: calc(var(--nav-h) + env(safe-area-inset-top, 0px)) 0 0 0; height: auto; z-index: 25; background: var(--bg); border-right: 0; }
+  body.nav-open .sidebar { display: block; }
+  .search input { width: 150px; }
+  h1 { font-size: 1.7rem; }
+}
+@media (max-width: 480px) { .brand span { display: none; } .search kbd { display: none; } .search input { padding-right: 10px; } }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+
+/* Nhãn màn hình (chữ tenant thấy trên app) */
+.ui { font-weight: 600; color: var(--fg); }
+.ui::before { content: "“"; color: var(--fg-muted); font-weight: 400; }
+.ui::after { content: "”"; color: var(--fg-muted); font-weight: 400; }
+.muted { color: var(--fg-muted); }
+.appendix-head { margin-top: 72px; padding: 16px 18px; border-radius: 12px; background: var(--bg-soft); border: 1px dashed var(--border); }
+.appendix-head h1 { font-size: 1.6rem; margin: 0 0 6px; }
+.appendix-head p { margin: 0; color: var(--fg-muted); max-width: 72ch; }
+</style>
+
+<header class="navbar">
+  <div class="navbar-inner">
+    <button class="icon-btn menu-btn" id="menu-btn" type="button" aria-label="メニューを開く">メニュー</button>
+    <a class="brand" href="#gioi-thieu">Billing Case Guide <span>· AI Platform</span></a>
+    <div class="search">
+      <input id="search-input" type="search" placeholder="ケース・エラーコードを検索..." aria-label="ケースまたはエラーコードを検索">
+      <kbd>Ctrl K</kbd>
+    </div>
+    <button class="icon-btn" id="theme-btn" type="button">表示</button>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="sidebar" id="sidebar" aria-label="ナビゲーション">
+    <div class="side-group">
+      <div class="side-title">はじめに</div>
+      <a class="side-link" href="#gioi-thieu">概要</a>
+      <a class="side-link" href="#thuat-ngu">用語</a>
+      <a class="side-link" href="#trang-thai">契約ステータス</a>
+    </div>
+    <div class="side-group">
+      <div class="side-title">プラン</div>
+      <a class="side-link" href="#goi">プラン</a>
+      <a class="side-link" href="#addon">追加プラン</a>
+    </div>
+    <div class="side-group">
+      <div class="side-title">プランのライフサイクル</div>
+      <a class="side-link" href="#dang-ky">アカウント登録</a>
+      <a class="side-link" href="#dung-thu">トライアル</a>
+      <a class="side-link" href="#doi-goi">プラン変更</a>
+      <a class="side-link" href="#huy-goi">プラン解約</a>
+    </div>
+    <div class="side-group">
+      <div class="side-title">料金</div>
+      <a class="side-link" href="#cong-thuc">料金計算式</a>
+      <a class="side-link" href="#that-bai-no">支払い失敗と未払い金</a>
+      <a class="side-link" href="#phuong-thuc">支払いカード</a>
+    </div>
+    <div class="side-group">
+      <div class="side-title">シートと上限</div>
+      <a class="side-link" href="#ghe">シート</a>
+      <a class="side-link" href="#gioi-han">利用上限</a>
+    </div>
+    <div class="side-group">
+      <div class="side-title">拡張</div>
+      <a class="side-link" href="#admin">管理者によるプラン管理</a>
+      <a class="side-link" href="#email">メール通知</a>
+    </div>
+    <div class="side-group">
+      <div class="side-title">参照</div>
+      <a class="side-link" href="#ma-loi">エラーコード一覧</a>
+      <a class="side-link" href="#nguon-bdd">BDDソース</a>
+    </div>
+    <div class="side-group">
+      <div class="side-title">技術付録</div>
+      <a class="side-link" href="#phu-luc">付録について</a>
+      <a class="side-link" href="#pl-thuat-ngu">用語対照</a>
+      <a class="side-link" href="#pl-luong">ケース別技術詳細</a>
+      <a class="side-link" href="#pl-webhook">Stripeからのイベント</a>
+      <a class="side-link" href="#pl-dong-bo">次回更新時スケジュールの同期</a>
+      <a class="side-link" href="#pl-addon">Stripe上の追加プラン</a>
+      <a class="side-link" href="#pl-admin">管理者による価格変更・プラン終了</a>
+      <a class="side-link" href="#pl-mail">メール送信</a>
+      <a class="side-link" href="#pl-luu-vet">ログとStripeエラー</a>
+      <a class="side-link" href="#pl-tinh-toan">換算と入力データ</a>
+    </div>
+  </nav>
+
+  <main>
+    <div class="content" id="content">
+
+<section id="gioi-thieu">
+  <h1>課金業務ケース集</h1>
+  <p class="lead">本ページは AI Platform の課金ルール（プラン、トライアル、プラン変更、解約、シート、未払い金、追加プラン、管理者による価格変更）をケース表にまとめたものです。各ケースに状況、テナント側の結果、ブロックされる場合のエラーコードを記載しています。</p>
+  <p class="meta">2026/10/05 更新 · 画面ラベルはアプリのベトナム語版に基づく</p>
+
+  <h3>目的別に読む</h3>
+  <div class="entry-grid">
+    <a class="entry" href="#doi-goi"><b>プラン変更でいくら請求される？</b><span>アップグレード、ダウングレード、Freeから、支払い遅延中</span></a>
+    <a class="entry" href="#cong-thuc"><b>料金を手計算で確認する</b><span>段階計算、クレジット、遅延中の未払い金、追加プランの日額</span></a>
+    <a class="entry" href="#that-bai-no"><b>カードが拒否されたら？</b><span>支払い遅延、7日間の猶予、Freeへの移行、未払い金</span></a>
+    <a class="entry" href="#ghe"><b>シートのルール</b><span>招待のブロック、期間途中のシート追加、次回更新時のシート数</span></a>
+    <a class="entry" href="#addon"><b>追加プラン</b><span>日額料金、各期間の日数分を請求</span></a>
+    <a class="entry" href="#ma-loi"><b>見慣れないエラーコード</b><span>意味、テナントに表示されるメッセージ、関連ケース</span></a>
+  </div>
+
+  <h3>読み方</h3>
+  <ul>
+    <li>太字の「」付きの文字（例：<span class="ui">現在のプラン</span>）は<b>画面上のラベルそのまま</b>です。<span class="ui">支払い履歴</span> › <span class="ui">現在の未払い金</span>の形式はタブ › 項目を表します。</li>
+    <li>列<b>ID</b>はやり取りで使うケース番号です（例：<code>CHG-21</code>）。コード上のIDではありません。</li>
+    <li><span class="b ok">OK</span>は成功、<span class="b err">エラーコード</span>はそのエラーコードでブロック、<span class="b warn">変更なし</span>は操作が失敗し、すべて元のままであることを示します。</li>
+    <li>Stripe連携、ログ、バックグラウンドジョブの詳細はページ末尾の<a href="#phu-luc">技術付録</a>にあります。</li>
+  </ul>
+</section>
+
+<section id="thuat-ngu">
+  <h2>用語</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>用語</th><th>意味</th><th>表示場所</th></tr></thead>
+    <tbody>
+      <tr><td>プラン</td><td>メインの契約プラン。各プランには並行する3つの課金サイクルの価格があります：<span class="ui">月払い</span>、<span class="ui">四半期払い</span>、<span class="ui">年払い</span>。</td><td>タブ：<span class="ui">プラン変更</span></td></tr>
+      <tr><td>追加プラン</td><td>以下の上限を追加購入：<span class="ui">プロジェクト</span>、<span class="ui">ストレージ</span>、<span class="ui">AI利用量</span>。料金は日額で、各期間ごとに日額 × 期間の日数を請求します。登録画面、プラン変更、トライアルでは選択できません。</td><td>タブ：<span class="ui">追加プラン</span>（法人プランのみ）</td></tr>
+      <tr><td>Freeプラン</td><td>現在の<span class="ui">単価</span>が0のプラン。表示は<span class="ui">無料</span>。システムの無料プランは削除・終了・価格変更ができません。</td><td>タブ：<span class="ui">プラン変更</span></td></tr>
+      <tr><td>個人プラン / 法人プラン</td><td>個人プランは常に1シートで、シート追加はできません。法人プランは複数シートを購入できます。</td><td><span class="ui">個人プラン管理</span> / <span class="ui">法人プラン管理</span></td></tr>
+      <tr><td>シート</td><td>購入済みのシート数で、メンバー数の上限です。プラン変更やトライアル時に、テナントはラベル<span class="ui">メンバー数</span>の欄でシート数を選びます（単位：<span class="ui">人</span>）。</td><td><span class="ui">利用上限</span> › <span class="ui">メンバー数</span>：「X / Y シート」</td></tr>
+      <tr><td>メンバー数</td><td>ステータスが<span class="ui">有効</span>のメンバー数。<span class="ui">停止中</span>のメンバーと削除済みのメンバーは含みません。プラン変更時に選べる最小シート数になります。</td><td>タブ：<span class="ui">メンバー一覧</span></td></tr>
+      <tr><td>アップグレード / ダウングレード</td><td>各プランにはシステム設定のランク（非表示）があります。変更先のランクが<b>高い</b>場合はアップグレード、同じか低い場合はダウングレードです。</td><td>管理者：<span class="ui">変更履歴</span>に「アップグレード/ダウングレード」と記録</td></tr>
+      <tr><td>請求期間 / 支払日</td><td>現在の期間の日付範囲と、次回更新日。</td><td><span class="ui">現在のプラン</span> › <span class="ui">次回のお支払い</span></td></tr>
+      <tr><td>猶予期間</td><td>最初の更新失敗から7日間。この間テナントは有料プランを引き続き利用できます。</td><td>支払い遅延バナー：「Freeプランへ移行されるまで残りN日」</td></tr>
+      <tr><td>未払い金</td><td>猶予期間中に有料プランを利用した未払い分。Freeへ移行された時点で発生します。有料プランに戻る際に全額支払う必要があります。</td><td><span class="ui">支払い履歴</span> › <span class="ui">現在の未払い金</span>；見積り時：<span class="ui">未払い残高</span></td></tr>
+      <tr><td>未使用分クレジット</td><td>現在の期間の未使用分。アップグレード時に新プランの料金から差し引かれます。詳しくは<a href="#cong-thuc">計算式</a>。</td><td><span class="ui">今期支払済み（クレジット）</span>；請求書明細：<span class="ui">旧プランの未使用期間分クレジット</span></td></tr>
+      <tr><td>使用済み</td><td>現在の期間で消化した金額。クレジット額を出すための計算過程にすぎません。</td><td>非表示</td></tr>
+      <tr><td>プラン変更予約</td><td>次回更新から適用待ちのプラン（ダウングレード後）。予約時に選んだシート数も保持します。</td><td>バナー<span class="ui">次のプラン — {プラン}</span>、ボタン<span class="ui">予約中のプランを取り消す</span></td></tr>
+      <tr><td>支払い履歴</td><td>請求ごとの記録。<span class="ui">ステータス</span>：<span class="ui">成功</span> / <span class="ui">失敗</span>。<span class="ui">種別</span>：<span class="ui">自動</span>（更新） / <span class="ui">手動</span>（テナント操作）。</td><td>タブ：<span class="ui">支払い履歴</span></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="trang-thai">
+  <h2>契約ステータス</h2>
+  <p>これは各法人・個人のプラン契約ステータスで、プラン自体のステータス（<span class="ui">有効</span> / <span class="ui">無効</span>、参照：<a href="#admin">管理者によるプラン管理</a>）とは別です。テナントにはステータスのラベルは表示されず、バナーでのみ分かります。ステータスのラベルは管理者側の法人詳細画面にのみ表示されます。括弧内はシステムコードで、ログ確認や障害報告で使います。</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>ステータス</th><th>意味</th><th>テナント側の表示</th><th>できること</th></tr></thead>
+    <tbody>
+      <tr><td><span class="b info">トライアル</span><br><span class="muted">TRIALING</span></td><td>有料プランの14日間トライアル中。まだ一度も支払っていない。</td><td>バナー<span class="ui">トライアル中 — 残りN日</span>、ボタン<span class="ui">今すぐ支払う</span>。シート追加ボタンの表示：<span class="ui">🔒 支払って解除</span>。</td><td>解約（即時Freeへ）、今すぐ支払ってトライアル終了。プラン変更・シート追加は不可。</td></tr>
+      <tr><td><span class="b ok">有効</span><br><span class="muted">ACTIVE</span></td><td>有料プランで今期の支払いが完了済み、またはFree利用中。</td><td>バナーなし。</td><td>有料プラン：プラン変更、解約、シート追加。Freeプラン：トライアル（未利用の場合）、有料プランの選択。</td></tr>
+      <tr><td><span class="b warn">支払い遅延</span><br><span class="muted">PAST_DUE</span></td><td>更新に失敗し、7日間の猶予期間中。システムが自動で再請求を試みます。</td><td>バナー<span class="ui">前回のお支払いが完了しませんでした…Freeプランへ移行されるまで残りN日。</span></td><td>今すぐ支払う、プラン変更（未払い金＋新プラン料金）、解約（即時、未払い金が発生）。シート追加は不可。</td></tr>
+      <tr><td><span class="b err">未払い</span><br><span class="muted">UNPAID</span></td><td>支払えずFreeへ移行済み（猶予期間切れ、または登録時にカードが拒否）。</td><td>未払い金がある場合：バナー<span class="ui">未払いのためプランがFreeに移行されました。未払い金 ¥X…</span></td><td>Freeプランと同様。有料プランに戻るには未払い金を全額支払う必要があります。</td></tr>
+      <tr><td><span class="b mute">解約済み</span><br><span class="muted">CANCELED</span></td><td>有料プランが完全に終了。</td><td>—</td><td>再度解約しようとするとブロック：<code>ALREADY_ON_FREE_PLAN</code>。</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout note"><div><strong>新規Freeアカウントがトライアル状態になる場合</strong>デフォルトのFreeアカウントは、実際の有料プランがなくてもトライアル状態になることがあります。この場合もFreeとして扱います：<span class="ui">今すぐ支払う</span>はブロック：<code>PAID_PLAN_REQUIRED</code> (TRL-09).</div></div>
+
+  <h3>ステータス遷移</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>遷移元</th><th>イベント</th><th>遷移先</th></tr></thead>
+    <tbody>
+      <tr><td>（新規）</td><td>Freeプランで登録</td><td><span class="b ok">有効</span>、トライアルなし</td></tr>
+      <tr><td>（新規）</td><td>カードありで有料プランに登録</td><td><span class="b info">トライアル</span> 14日間</td></tr>
+      <tr><td>（新規）</td><td>有料プランに登録、カード拒否</td><td>Free + <span class="b err">未払い</span>、未払い金なし</td></tr>
+      <tr><td>Free</td><td>操作：<span class="ui">トライアル</span></td><td><span class="b info">トライアル</span> 14日間</td></tr>
+      <tr><td>Free（未払い金ありも含む）</td><td>操作：<span class="ui">選択：</span>有料プラン、請求成功</td><td><span class="b ok">有効</span>、未払い金は0に</td></tr>
+      <tr><td>トライアル</td><td>トライアル終了後に初回請求成功、または<span class="ui">今すぐ支払う</span>成功</td><td><span class="b ok">有効</span></td></tr>
+      <tr><td>トライアル</td><td>プラン解約</td><td>即時Free、未払い金なし、トライアル利用済み扱い</td></tr>
+      <tr><td>有効</td><td>更新失敗</td><td><span class="b warn">支払い遅延</span>、7日間の猶予カウント開始</td></tr>
+      <tr><td>支払い遅延</td><td>システムの再請求が成功、または<span class="ui">今すぐ支払う</span>成功</td><td><span class="b ok">有効</span></td></tr>
+      <tr><td>支払い遅延</td><td>プラン変更、未払い金＋新プラン料金の請求成功</td><td><span class="b ok">有効</span>（新プランで）</td></tr>
+      <tr><td>支払い遅延</td><td>7日経過しても請求できない</td><td>Free + <span class="b err">未払い</span>、未払い金が発生</td></tr>
+      <tr><td>支払い遅延</td><td>テナントが自ら解約</td><td>即時Free、利用日数に応じて未払い金が発生</td></tr>
+      <tr><td>有効、<span class="ui">解約申請済み</span></td><td>期間終了</td><td>Free</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="goi">
+  <h2>プラン</h2>
+  <p>管理者は画面<span class="ui">プラン管理（マスタ）</span>でプランを作成します。各プランには3つのサイクルの価格、<span class="ui">プロジェクト</span> / <span class="ui">ストレージ</span> / <span class="ui">AI利用量</span>の上限、<span class="ui">メンバー上限</span>、<span class="ui">初月割引（%）</span>、そしてアップグレードとダウングレードを判定するランクがあります。プランは法人と個人で共通で、分かれていません。単価は<b>1シートあたり</b>です：期間の料金 = シート数 × そのサイクルの単価。個人アカウントは常に1シートのため、期間の料金は単価と同額になります。</p>
+  <div class="callout note"><div><strong>以下のプランは例示のみ</strong>実際のプラン名、価格、上限は管理者が設定します。四半期の価格は月額換算より10%、年間は20%の割引です。</div></div>
+
+  <h3>プラン例</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>プラン</th><th class="num">ランク</th><th class="num">月払い（¥/シート）</th><th class="num">四半期払い（¥/シート）</th><th class="num">年払い（¥/シート）</th><th>プロジェクト</th><th>ストレージ</th><th>AI利用量</th><th class="num">メンバー上限</th><th class="num">初月割引</th></tr></thead>
+    <tbody>
+      <tr><td><b>Free</b></td><td class="num">0</td><td class="num">無料</td><td class="num">—</td><td class="num">—</td><td>3</td><td>5 GB</td><td>100,000トークン</td><td class="num">5</td><td class="num">—</td></tr>
+      <tr><td><b>Standard</b></td><td class="num">1</td><td class="num">1,000</td><td class="num">2,700</td><td class="num">9,600</td><td>20</td><td>100 GB</td><td>1,000,000トークン</td><td class="num">10</td><td class="num">50%</td></tr>
+      <tr><td><b>Pro</b></td><td class="num">2</td><td class="num">2,000</td><td class="num">5,400</td><td class="num">19,200</td><td>無制限</td><td>1 TB</td><td>5,000,000トークン</td><td class="num">10</td><td class="num">20%</td></tr>
+    </tbody>
+  </table></div>
+  <p><span class="ui">メンバー上限</span>：Freeプランではメンバー数の上限そのものです。有料プランでは、法人プランがトライアルを開始する際の既定シート数（TRL-15）で、以降は購入済みシート数が上限になります。<span class="ui">初月割引</span>は<a href="#cong-thuc-phi">初回の料金計算時</a>のみ適用されます。</p>
+
+  <h3>プラン例での適用イメージ</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>状況</th><th>結果</th></tr></thead>
+    <tbody>
+      <tr><td>法人がStandardを月払い、10シートで利用</td><td>各期間の料金は 10 × 1,000 = ¥10,000。初回の料金計算は50%割引で ¥5,000。</td></tr>
+      <tr><td>法人がStandardを年払い、10シートで利用</td><td>各期間の料金は 10 × 9,600 = ¥96,000（1シートあたり月 ¥800 相当）。</td></tr>
+      <tr><td>Standard → Pro</td><td>アップグレード（ランク1 → 2）：新プラン料金 − クレジットを即時請求し、すぐに適用。</td></tr>
+      <tr><td>Pro → Standard</td><td>ダウングレード（ランク2 → 1）：請求なし、次回更新時から適用。</td></tr>
+      <tr><td>Standard月払い → Standard年払い</td><td>同一プランでのサイクル変更：ダウングレードと同じ扱いで、次回更新時から適用。</td></tr>
+      <tr><td>Free → Standard四半期払い、6シート</td><td>1期間分 6 × 2,700 = ¥16,200 を即時請求（未払い金があれば加算）。初回の料金計算なら50%割引。</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="addon">
+  <h2>追加プラン</h2>
+  <div class="callout note"><div><strong>料金の計算方法</strong>メインプラン（管理者が月・四半期・年の価格を入力）と異なり、追加プランには<b>1日あたりの価格が1つ</b>のみで、請求はすべて日額 × 日数です。1法人のすべての追加プランは共通の<span class="ui">次回支払日</span>を使います。初回登録時、テナントは<span class="ui">新期間の開始日</span>を選びます。初回期間（本日からその日まで）は日割りで支払い：<span class="ui">今期のお支払い ¥{日額} × {日数}日</span>。その日以降、<span class="ui">定期更新</span>をオンにすると1か月ごとに更新され、各期間の料金 = 日額 × その期間の日数（<a href="#cong-thuc">計算式</a>）。</div></div>
+
+  <h3>追加プラン例</h3>
+  <p>例示のみで、実際の名称、日額、上限は管理者が設定します。追加プランでシートは増えません。</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>追加プラン</th><th>追加される上限</th><th class="num">日額（¥）</th><th class="num">30日の期間（¥）</th><th class="num">31日の期間（¥）</th></tr></thead>
+    <tbody>
+      <tr><td><b>プロジェクト +10</b></td><td><span class="ui">プロジェクト</span> +10</td><td class="num">30</td><td class="num">900</td><td class="num">930</td></tr>
+      <tr><td><b>ストレージ +100 GB</b></td><td><span class="ui">ストレージ</span> +100 GB</td><td class="num">50</td><td class="num">1,500</td><td class="num">1,550</td></tr>
+      <tr><td><b>AI +1,000,000トークン</b></td><td><span class="ui">AI利用量</span> +1,000,000トークン</td><td class="num">100</td><td class="num">3,000</td><td class="num">3,100</td></tr>
+    </tbody>
+  </table></div>
+  <p>例：Standardプラン（プロジェクト20、ストレージ100 GB。<a href="#goi">プラン例</a>を参照）の法人が<b>プロジェクト +10</b>と<b>ストレージ +100 GB</b>を購入 → 上限はプロジェクト30、200 GBになります。初回に<span class="ui">新期間の開始日</span>を本日から20日後に設定 → 初回期間の請求は (30 + 50) × 20 = ¥1,600。以降は30日の期間ごとに ¥2,400。期間の途中、共通の支払日まで12日残っている時点で<b>AI +1,000,000トークン</b>を追加登録 → 100 × 12 = ¥1,200 を即時請求。</p>
+
+  <h3>登録</h3>
+  <div class="table-wrap"><table class="cases">
+    <thead><tr><th>ID</th><th>状況</th><th>結果</th><th>エラーコード</th></tr></thead>
+    <tbody>
+      <tr><td class="id">ADD-01</td><td>初回のプラン、<span class="ui">定期更新</span>をオン</td><td>初回期間を日割りで請求。プラン表示は<span class="ui">{date}まで有効（以降は自動更新）</span>；以降は各期間の日数分を請求。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">ADD-02</td><td>初回のプラン、自動更新をオフ</td><td>初回期間を日割りで請求。プラン表示は<span class="ui">{date}まで有効（更新なし）</span>で、その日に自動終了。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">ADD-03</td><td>初回のプラン登録で<span class="ui">新期間の開始日</span>または自動更新の選択が未指定</td><td>ブロック。</td><td><span class="b err">END_DATE_AND_AUTO_RENEW_REQUIRED_FOR_FIRST_ADDON</span></td></tr>
+      <tr><td class="id">ADD-15</td><td><span class="ui">新期間の開始日</span>が未選択の状態で初回プランの金額をプレビュー</td><td>ブロック：<span class="ui">最初の追加プランの締め日を選択してください。</span> ADD-03とは別のコードです（ADD-03は登録ボタン押下時に発生）。</td><td><span class="b err">END_DATE_REQUIRED_FOR_FIRST_ADDON</span></td></tr>
+      <tr><td class="id">ADD-04</td><td><span class="ui">新期間の開始日</span>が本日または過去</td><td>ブロック。明日なら有効。</td><td><span class="b err">END_DATE_MUST_BE_IN_FUTURE_FOR_FIRST_ADDON</span></td></tr>
+      <tr><td class="id">ADD-05</td><td>その日が本日から1年を超える（ちょうど1年は有効）</td><td>ブロック。</td><td><span class="b err">END_DATE_EXCEEDS_ONE_YEAR_FOR_FIRST_ADDON</span></td></tr>
+      <tr><td class="id">ADD-06</td><td>カード未登録</td><td>ブロック。</td><td><span class="b err">PAYMENT_METHOD_REQUIRED_FOR_ADDON_REGISTRATION</span></td></tr>
+      <tr><td class="id">ADD-07</td><td>追加プラン以外のプランを選択</td><td>ブロック。</td><td><span class="b err">PLAN_IS_NOT_ADD_ON</span></td></tr>
+      <tr><td class="id">ADD-08</td><td>停止済みの追加プラン</td><td>ブロック。</td><td><span class="b err">PLAN_NOT_FOUND</span></td></tr>
+      <tr><td class="id">ADD-09</td><td><span class="ui">有効</span>のプランを再登録</td><td>ブロック。</td><td><span class="b err">ADDON_PLAN_ALREADY_REGISTERED</span></td></tr>
+      <tr><td class="id">ADD-10</td><td>過去に利用し完全に終了したプランを登録</td><td>新規と同様に登録。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">ADD-11</td><td>初回期間の請求でカード拒否</td><td>登録できず、何も変わりません。エラーコードはシステムのカードエラー通知方法から判定（<a href="#pl-luu-vet">付録</a>）。</td><td><span class="b err">PAYMENT_DECLINED</span></td></tr>
+      <tr><td class="id">ADD-12</td><td>追加プランがある状態で別の追加プランを登録</td><td>新しいプランは既存の支払日に合わせます（<span class="ui">毎月{date}日に一括支払い</span>）。プラン追加とその日までの残り日数分の請求を1ステップで行うため、請求済みなのにプランがない状態は発生しません。プレビュー金額は常に実際の請求額と一致します。次回更新時：自動更新オンなら新プランも更新、オフなら新プランも同時に終了。既存の自動更新設定はこの登録で変わりません。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">ADD-13</td><td>追加登録でカード拒否</td><td>ステップ全体を取り消し：プラン追加なし、請求なし、他のプランも変わらない。</td><td><span class="b warn">変更なし</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>更新、更新解除、再登録</h3>
+  <div class="table-wrap"><table class="cases">
+    <thead><tr><th>ID</th><th>状況</th><th>結果</th><th>エラーコード</th></tr></thead>
+    <tbody>
+      <tr><td class="id">ADD-20</td><td><span class="ui">定期更新</span>をオフ</td><td>すべての追加プランが現在の期間後に終了（<span class="ui">現在の期間後に終了します</span>）。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">ADD-21</td><td><span class="ui">定期更新</span>を再度オン</td><td>毎月の更新を継続（<span class="ui">毎月自動でお支払い</span>）。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">ADD-22</td><td>追加プランがない状態で自動更新をオン/オフ</td><td>ブロック。</td><td><span class="b err">NO_ACTIVE_ADDON_SUBSCRIPTION</span></td></tr>
+      <tr><td class="id">ADD-23</td><td>他のプランがある状態で1プランの<span class="ui">更新を解除</span>を押す</td><td>そのプランは<span class="ui">自動更新なし</span>に変わり、支払済みの日まで利用可能；他のプランは<span class="ui">有効</span>のままです。以前から<span class="ui">自動更新なし</span>のプランは自動で再開しません。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">ADD-24</td><td>最後のプランの更新を解除</td><td>プランは<span class="ui">自動更新なし</span>に変わり、期間終了ですべての追加プランが終了。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">ADD-25</td><td><span class="ui">定期更新</span>がオフの状態で1プランの更新を解除</td><td>ブロック、プランは<span class="ui">有効</span>のまま。</td><td><span class="b err">ADDON_AUTO_RENEW_DISABLED</span></td></tr>
+      <tr><td class="id">ADD-26</td><td>存在しない / 法人に属さないプランの更新を解除</td><td>ブロック。</td><td><span class="b err">ADDON_ITEM_NOT_FOUND</span></td></tr>
+      <tr><td class="id">ADD-27</td><td><span class="ui">自動更新なし</span>のプランで<span class="ui">再登録</span>を押す</td><td>追加請求なし（<span class="ui">今期の追加請求はありません — 次回更新から更新が再開されます</span>）、プランは<span class="ui">有効</span>に戻ります。終了待ちの最後のプランでも同様で、すべての追加プランの更新が再開されます。見積りは¥0。</td><td><span class="b ok">OK</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>毎月の支払い</h3>
+  <ul>
+    <li>初回期間の請求、追加プランの請求、更新の請求はいずれも<span class="ui">支払い履歴</span>に行が追加されます。支払日は請求時点で記録されます。</li>
+    <li>各更新期間は日額 × その期間の日数を請求。次回更新時の日数は支払い成功のたびに事前に算出されます。</li>
+    <li>最初の更新請求に失敗 → 追加プランは支払い遅延となり、通常プランと同様に再請求が予定されます。</li>
+    <li>期間終了時に更新しない → すべての追加プランが終了し、表示されなくなります。</li>
+  </ul>
+</section>
+
+<section id="dang-ky">
+  <h2>アカウント登録</h2>
+  <p>登録画面には公開中のプランのみ表示されます（追加プランは除く）。有料プランの登録は必ず14日間のトライアルから始まります。</p>
+  <div class="table-wrap"><table class="cases">
+    <thead><tr><th>ID</th><th>状況</th><th>結果</th><th>エラーコード</th></tr></thead>
+    <tbody>
+      <tr><td class="id">REG-01</td><td>新しいメール、メール受信可、公開中の有料プランを選択、カードあり</td><td>14日間のトライアル開始：バナー<span class="ui">トライアル中 — 残り14日</span>。法人プランは10シート、個人プランは1シートが初期値。入力したカードは<span class="ui">デフォルト</span>。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">REG-02</td><td>有料プランを選択したがカード未入力</td><td>ブロック。</td><td><span class="b err">PAYMENT_METHOD_REQUIRED_FOR_TRIAL</span></td></tr>
+      <tr><td class="id">REG-03</td><td>Freeプランを選択（カードの有無を問わず）</td><td>ステータス「有効」でアカウントを作成。トライアルなし、カード不要。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">REG-04</td><td>いずれかのプランで登録した直後</td><td><span class="ui">支払い履歴</span>は空。最初の行は実際に請求が発生したときにのみ表示されます。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">REG-05</td><td>有料プランを選択、プラン作成時にカードが拒否</td><td>登録自体は成功。アカウントはFree、ステータスは「未払い」、<span class="ui">現在の未払い金</span> = 0. <span class="ui">支払い履歴</span>に1行<span class="ui">失敗</span>（選択したプランの価格と同額）。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">REG-06</td><td>他のアカウントで使用済みのメール</td><td>ブロック。</td><td><span class="b err">EMAIL_ALREADY_EXISTS</span></td></tr>
+      <tr><td class="id">REG-07</td><td>メールを受信できないアドレス</td><td>ブロック。</td><td><span class="b err">EMAIL_NOT_DELIVERABLE</span></td></tr>
+      <tr><td class="id">REG-08</td><td>停止済みのプラン、または追加プラン</td><td>存在しないプランと同様にブロック。</td><td><span class="b err">PLAN_NOT_FOUND</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>初期シート数</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>種別</th><th>プラン</th><th class="num">シート</th></tr></thead>
+    <tbody>
+      <tr><td>法人プラン</td><td>Free</td><td class="num">= <span class="ui">メンバー上限</span>管理者がFreeプランに設定した値</td></tr>
+      <tr><td>法人プラン</td><td>有料（トライアル開始）</td><td class="num">10</td></tr>
+      <tr><td>個人プラン</td><td>任意</td><td class="num">1</td></tr>
+    </tbody>
+  </table></div>
+  <p>このシート数は登録直後から<span class="ui">利用上限</span> › <span class="ui">メンバー数</span>に表示されます。</p>
+</section>
+
+<section id="dung-thu">
+  <h2>トライアル</h2>
+  <div class="callout note"><div><strong>主なルール</strong>トライアルは1アカウントにつき1回のみ、未払い金のないFreeプランからのみ、有料プランのみが対象です。期間は14日間で、初回支払日はトライアル終了日の翌日です。法人プランのトライアルは既定で<b>10シート</b>、個人プランは常に1シートです。トライアル終了の3日前に、システムが通知メールを送信します（MAIL-06）。</div></div>
+
+  <h3>トライアル開始（ボタン<span class="ui">トライアル</span>）</h3>
+  <div class="table-wrap"><table class="cases">
+    <thead><tr><th>ID</th><th>状況</th><th>結果</th><th>エラーコード</th></tr></thead>
+    <tbody>
+      <tr><td class="id">TRL-01</td><td>Free利用中、トライアル未利用、未払い金なし、有料プランを選択</td><td>確認ダイアログ<span class="ui">{プラン}を14日間お試しになりますか？</span>、確定すると14日間のトライアルを開始。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">TRL-15</td><td>法人プランで<span class="ui">トライアル</span>を押す</td><td><span class="ui">メンバー数</span>欄に10が初期入力されます（有効メンバーが10人を超える場合は、その有効メンバー数が入ります）。テナントは変更可能で、下限は有効メンバー数です（TRL-05）。個人プランは常に1シート。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">TRL-02</td><td>トライアル利用済み</td><td>ブロック。</td><td><span class="b err">TRIAL_ALREADY_USED</span></td></tr>
+      <tr><td class="id">TRL-03</td><td>試したいプランが無料プラン</td><td>ブロック。</td><td><span class="b err">PLAN_NOT_ELIGIBLE_FOR_TRIAL</span></td></tr>
+      <tr><td class="id">TRL-04</td><td>有料プラン利用中</td><td>ブロック。</td><td><span class="b err">TRIAL_ONLY_AVAILABLE_FROM_FREE_PLAN</span></td></tr>
+      <tr><td class="id">TRL-14</td><td>Freeだが未払い金あり</td><td>ブロック：<span class="ui">トライアルの前に未払い金をお支払いください。</span>有料プランに上げたい場合はボタン<span class="ui">選択</span>を使用（未払い金も同時に請求、CHG-11）。</td><td><span class="b err">TRIAL_NOT_AVAILABLE_WITH_OUTSTANDING_DEBT</span></td></tr>
+      <tr><td class="id">TRL-05</td><td>選択したシート数が有効メンバー数より少ない</td><td>ブロック。</td><td><span class="b err">SEAT_COUNT_BELOW_ACTIVE_MEMBER_COUNT</span></td></tr>
+      <tr><td class="id">TRL-06</td><td>追加プランでトライアルしようとした</td><td>ブロック。</td><td><span class="b err">PLAN_NOT_FOUND</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>トライアル期間中</h3>
+  <div class="table-wrap"><table class="cases">
+    <thead><tr><th>ID</th><th>状況</th><th>結果</th><th>エラーコード</th></tr></thead>
+    <tbody>
+      <tr><td class="id">TRL-07</td><td>操作：<span class="ui">今すぐ支払う</span>（トライアルバナー上）</td><td>トライアルを即時終了し、初回期間分を請求。請求成功でトライアルバナーが消え、ボタン<span class="ui">シート追加</span>が解除されます。初回期間は課金済みのため、次回更新以降は初月割引がなくなります。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">TRL-08</td><td>操作：<span class="ui">今すぐ支払う</span>（ステータスが「有効」の状態で）</td><td>ブロック。</td><td><span class="b err">NOT_IN_TRIAL</span></td></tr>
+      <tr><td class="id">TRL-09</td><td>操作：<span class="ui">今すぐ支払う</span>（Free利用中。デフォルトでトライアル状態のFreeアカウント（実際の有料プランなし）を含む）</td><td>ブロック。</td><td><span class="b err">PAID_PLAN_REQUIRED</span></td></tr>
+      <tr><td class="id">TRL-10</td><td>別の有料プランへの変更（見積り表示を含む）</td><td>ブロック。</td><td><span class="b err">PLAN_CHANGE_NOT_ALLOWED_WHILE_TRIALING</span></td></tr>
+      <tr><td class="id">TRL-11</td><td>シート追加</td><td>ブロック。</td><td><span class="b err">SEAT_INCREASE_BLOCKED_DURING_TRIAL</span></td></tr>
+      <tr><td class="id">TRL-12</td><td>プラン解約</td><td>即時解約（期間終了を待たない）、即時Freeへ、未払い金なし。トライアル利用済みとして扱われます。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">TRL-13</td><td>トライアル開始時</td><td><span class="ui">支払い履歴</span>に¥0の行は作られません。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">TRL-16</td><td>トライアル終了の3日前</td><td>法人オーナー（法人プラン）またはアカウント所有者（個人プラン）に、トライアル終了の通知メールが届きます（MAIL-06）。すでに解約済み、または先に<span class="ui">今すぐ支払う</span>を行った場合は届きません。</td><td><span class="b ok">OK</span></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="doi-goi">
+  <h2>プラン変更</h2>
+  <p>タブ：<span class="ui">プラン変更</span>異なる2つのボタンがあります：<span class="ui">トライアル</span>（参照：<a href="#dung-thu">上記</a>）と<span class="ui">選択：</span>。ボタン<span class="ui">選択：</span>はトライアルを付与しません。トライアル未利用のアカウントでも同様です。</p>
+
+  <h3>変更の種類</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>種別</th><th>条件</th><th>即時請求額</th><th>適用</th><th>画面メッセージ</th></tr></thead>
+    <tbody>
+      <tr><td><b>Free → 有料</b></td><td>Free利用中にボタン<span class="ui">選択：</span>有料プラン</td><td>新プランの全期間料金（＋未払い金があれば）</td><td>即時；新しい請求期間は当日開始</td><td><span class="ui">確定するとすぐに¥Xが請求されます…</span></td></tr>
+      <tr><td><b>アップグレード</b></td><td>変更先のランクが高い</td><td>新プラン料金 − クレジット</td><td>即時；新しい請求期間は当日開始</td><td><span class="ui">確定するとすぐに{プラン}が適用されます。</span></td></tr>
+      <tr><td><b>ダウングレード</b></td><td>変更先のランクが同じか低い</td><td>0</td><td>次回更新時</td><td><span class="ui">{プラン}は{date}（次回更新日）から適用されます…</span></td></tr>
+      <tr><td><b>同一プランでのサイクル変更</b></td><td>同じプランで月/四半期/年を変更</td><td>0 — 月額換算の単価が高くなる場合も、常にダウングレード扱い</td><td>次回更新時</td><td>ダウングレードと同じ</td></tr>
+      <tr><td><b>支払い遅延中</b></td><td>任意の有料プランへ変更</td><td>利用日数分の未払い金 + 新プランの全期間料金</td><td>即時；遅延状態は解消</td><td><span class="ui">支払いが遅延しています。確定すると、遅延中の未払い金が即時に請求されます…</span></td></tr>
+      <tr><td><b>有料 → Free</b></td><td>Freeプランに戻したい</td><td>—</td><td>—</td><td>見積りは表示されます。Freeに戻すにはボタン<span class="ui">プラン解約</span>（参照：<a href="#huy-goi">プラン解約</a>）</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>共通条件</h3>
+  <div class="table-wrap"><table class="cases">
+    <thead><tr><th>ID</th><th>状況</th><th>結果</th><th>エラーコード</th></tr></thead>
+    <tbody>
+      <tr><td class="id">CHG-01</td><td>カード未登録でFree → 有料</td><td>ブロック。（解約してFreeに戻す場合はカード不要。）</td><td><span class="b err">PAYMENT_METHOD_REQUIRED_FOR_PLAN_CHANGE</span></td></tr>
+      <tr><td class="id">CHG-02</td><td>個人プランで1以外のシート数を選択</td><td>ブロック。</td><td><span class="b err">SEAT_COUNT_INVALID_FOR_PERSONAL_TENANT</span></td></tr>
+      <tr><td class="id">CHG-03</td><td>法人プランで有効メンバー数より少ないシート数を選択</td><td>ブロック。同数以上（余分に購入）は有効。</td><td><span class="b err">SEAT_COUNT_BELOW_ACTIVE_MEMBER_COUNT</span></td></tr>
+      <tr><td class="id">CHG-04</td><td>次回更新時のプラン変更予約がある状態で、別の有料プランへ変更（アップグレード、ダウングレード、見積り、支払い遅延中も含む）</td><td>ブロック、既存の予約はそのまま。プラン変更ボタンにツールチップ<span class="ui">次回更新時のプラン変更予約があります。別のプランに変更する前に、その予約を取り消してください。</span> Freeへの変更の見積りは可能。</td><td><span class="b err">PENDING_PLAN_SCHEDULE_EXISTS</span></td></tr>
+      <tr><td class="id">CHG-05</td><td>変更先が停止済みのプラン、または追加プラン</td><td>ブロック。停止済みプランを利用中のテナントも<span class="ui">現在のプラン</span>の表示や他プランへの変更見積りは通常どおり可能。</td><td><span class="b err">PLAN_NOT_FOUND</span></td></tr>
+      <tr><td class="id">CHG-06</td><td>トライアル中</td><td>ブロック。</td><td><span class="b err">PLAN_CHANGE_NOT_ALLOWED_WHILE_TRIALING</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Free → 有料</h3>
+  <div class="table-wrap"><table class="cases">
+    <thead><tr><th>ID</th><th>状況</th><th>結果</th><th>エラーコード</th></tr></thead>
+    <tbody>
+      <tr><td class="id">CHG-10</td><td>未払い金なし（トライアル利用の有無を問わず）</td><td>トライアルなしで、全期間料金を即時請求。新しい請求期間はプラン変更日から開始。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">CHG-11</td><td>未払い金あり、請求成功</td><td>未払い金と新プラン料金を1回で請求。<span class="ui">支払い履歴</span>に即時1行追加<span class="ui">成功</span>、明細：<span class="ui">合計金額（概算）</span>＝新プラン価格、<span class="ui">未払い残高（前期）</span>＝未払い金額、<span class="ui">支払済み</span>＝合計。<span class="ui">現在の未払い金</span>は0になり、ステータスは「有効」。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">CHG-12</td><td>カード拒否</td><td>何も変わりません：Freeのまま、<span class="ui">現在の未払い金</span>は変わらず、<span class="ui">支払い履歴</span>に行は追加されません。</td><td><span class="b warn">変更なし</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>アップグレード</h3>
+  <ol class="flow">
+    <li> <span class="ui">今期支払済み（クレジット）</span>を<a href="#cong-thuc-bac-thang">段階計算式</a>で計算。シート数は<b>現在の数</b>（新たに選んだシート数や有効メンバー数ではない）。</li>
+    <li><span class="ui">新プラン料金</span>はテナントが選んだシート数で計算。</li>
+    <li><span class="ui">即時請求額</span>＝新プラン料金 − クレジット、最小0。クレジットは新プラン料金を上限に使われ、余りは繰り越されません。</li>
+    <li>操作：<span class="ui">¥Xを支払ってプランを変更</span>。請求成功で新プランが即時適用され、新しい請求期間は当日開始。</li>
+    <li><span class="ui">支払い履歴</span>に行が追加<span class="ui">成功</span>（プラン変更分）、明細には<span class="ui">旧プランの未使用期間分クレジット</span>。この行は決済ゲートウェイが請求を確認した時点で表示され、ボタンを押した瞬間ではありません。</li>
+  </ol>
+  <div class="table-wrap"><table class="cases">
+    <thead><tr><th>ID</th><th>状況</th><th>結果</th><th>エラーコード</th></tr></thead>
+    <tbody>
+      <tr><td class="id">CHG-20</td><td>アップグレード成功</td><td>新しい期間は選択したシート数どおり。例：現在5シート・メンバー3人で6を選択 → 新期間は6シート。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">CHG-21</td><td>クレジットが新プラン料金より大きい</td><td><span class="ui">即時請求額</span>＝0、追加請求なし。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">CHG-22</td><td>カード拒否</td><td>プランは変わりません。<span class="ui">支払い履歴</span>に1行追加<span class="ui">失敗</span>、<span class="ui">種別</span> <span class="ui">手動</span>、金額は算出した即時請求額。途中でエラーが起きてもクレジットは失われません（付録のCHG-23）。</td><td><span class="b warn">変更なし</span></td></tr>
+      <tr><td class="id">CHG-24</td><td>解約申請後にアップグレード</td><td>解約申請は自動で取り下げられ、次の通知は表示されなくなります：<span class="ui">{date}以降にプランは終了します…</span></td><td><span class="b ok">OK</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>ダウングレード / サイクル変更</h3>
+  <div class="table-wrap"><table class="cases">
+    <thead><tr><th>ID</th><th>状況</th><th>結果</th><th>エラーコード</th></tr></thead>
+    <tbody>
+      <tr><td class="id">CHG-30</td><td>より安いプランにダウングレード</td><td>請求なし。新プランはまだ適用されず、タブ<span class="ui">現在のプラン</span>にバナー<span class="ui">次のプラン — {プラン}。{日付}から有効です。今期の終了までは現在のプランをご利用いただけます。</span>次回更新時は予約時に選んだシート数で計算。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">CHG-31</td><td>同じプランの別サイクルに変更</td><td>ダウングレードと同様、予約には新しいサイクルが設定されます。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">CHG-32</td><td>解約申請後にダウングレード</td><td>解約申請は自動で取り下げられ、新プランの予約は通常どおり作成されます。</td><td><span class="b ok">OK</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>支払い遅延中のプラン変更</h3>
+  <div class="table-wrap"><table class="cases">
+    <thead><tr><th>ID</th><th>状況</th><th>結果</th><th>エラーコード</th></tr></thead>
+    <tbody>
+      <tr><td class="id">CHG-40</td><td>変更（アップグレード/ダウングレード）、請求成功</td><td>未払い金（利用日数分）と新プラン料金を1回で請求。請求成功時のみ新プランが選択したシート数で適用されます。遅延バナーは消え、未払い金は0に。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">CHG-41</td><td>カード拒否</td><td>すべて元のまま：旧プランのまま、支払い遅延のまま。</td><td><span class="b warn">変更なし</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>料金見積り</h3>
+  <p>枠<span class="ui">料金見積り — 現在の選択</span>は金額を表示するだけで、請求もプラン変更も行いません。金額は実際のプラン変更時と同じ計算式で算出されます。</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>ケース</th><th>即時請求額</th><th>適用時期</th></tr></thead>
+    <tbody>
+      <tr><td>アップグレード</td><td>新プラン料金 − クレジット</td><td>即時</td></tr>
+      <tr><td>ダウングレード</td><td>0 (<span class="ui">追加のお支払いは不要です…</span>）</td><td>次回支払日</td></tr>
+      <tr><td>Free → 有料、未払い金なし</td><td>新プランの全期間料金</td><td>即時</td></tr>
+      <tr><td>Free → 有料、未払い金あり</td><td>全期間料金 + <span class="ui">未払いの遅延金</span></td><td>即時</td></tr>
+      <tr><td>支払い遅延中</td><td>利用日数分の未払い金 + 新プランの全期間料金</td><td>即時</td></tr>
+      <tr><td>トライアル中</td><td colspan="2">ブロック<span class="b err">PLAN_CHANGE_NOT_ALLOWED_WHILE_TRIALING</span></td></tr>
+    </tbody>
+  </table></div>
+  <p>行<span class="ui">今期支払済み（クレジット）</span>はFree利用中、トライアル中、支払い遅延中（今期が未払い）のときは常に0。</p>
+</section>
+
+<section id="huy-goi">
+  <h2>プラン解約</h2>
+  <p>通常の解約は即時には有効になりません。テナントは契約期間の終了まで有料プランを利用できます。例外はトライアル中と支払い遅延中で、この場合は即時に解約されます。</p>
+  <div class="table-wrap"><table class="cases">
+    <thead><tr><th>ID</th><th>状況</th><th>結果</th><th>エラーコード</th></tr></thead>
+    <tbody>
+      <tr><td class="id">CAN-01</td><td>有料プラン利用中にボタン<span class="ui">プラン解約</span></td><td>メッセージを表示<span class="ui">{date}以降にプランは終了します。今期の終了まではすべての機能をご利用いただけます…</span>期間終了時に自動でFreeへ移行。即時のプラン変更はなし。（以前にプラン変更・価格変更があったプランは付録のCAN-02を参照。）</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">CAN-03</td><td>次回更新時のダウングレード予約がある</td><td>ブロック。先に<span class="ui">予約中のプランを取り消す</span>が必要。</td><td><span class="b err">PENDING_PLAN_SCHEDULE_EXISTS</span></td></tr>
+      <tr><td class="id">CAN-04</td><td>解約申請済みで、再度ボタンを押す</td><td>ブロック。</td><td><span class="b err">SUBSCRIPTION_ALREADY_CANCELLED</span></td></tr>
+      <tr><td class="id">CAN-05</td><td>支払い遅延中</td><td>常に許可、効力は<b>即時</b>（事前メッセージ：<span class="ui">今解約すると即時に有効になります…</span>）。即時Freeへ、利用日数分の未払い金が発生。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">CAN-06</td><td>トライアル中</td><td>即時解約、Freeへ、未払い金なし。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">CAN-07</td><td>Free利用中、または有料プランは終了済みだが画面がまだFreeに更新されていない</td><td>ブロック。</td><td><span class="b err">ALREADY_ON_FREE_PLAN</span></td></tr>
+      <tr><td class="id">CAN-08</td><td>解約申請済みで期間終了</td><td>自動でFreeへ移行。管理者側では次に1行追加：<span class="ui">変更履歴</span>。</td><td><span class="b ok">OK</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>予約中のプランを取り消す</h3>
+  <div class="table-wrap"><table class="cases">
+    <thead><tr><th>ID</th><th>状況</th><th>結果</th><th>エラーコード</th></tr></thead>
+    <tbody>
+      <tr><td class="id">CAN-10</td><td>次回更新時適用待ちのプランがある状態でボタン<span class="ui">予約中のプランを取り消す</span></td><td>バナー<span class="ui">次のプラン</span>は消え、次回更新時も現在のプランが継続します。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">CAN-11</td><td>適用待ちのプランなし（前期の予約がすでに自動適用済みの場合も含む）</td><td>ブロック。</td><td><span class="b err">PENDING_PLAN_SCHEDULE_NOT_FOUND</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Freeに戻ったときのシート数</h3>
+  <p>次の3つのケースに適用：支払い遅延中に自ら解約、7日間の猶予期間切れでFreeへ移行、解約申請後の期間終了。</p>
+  <div class="formula">シート数 = max（Freeプランのメンバー上限、有効メンバー数）</div>
+  <p>例：現在20シート、Freeプランの上限5人、有効メンバー8人 → 8シート（既存メンバーは削らない）。</p>
+</section>
+
+<section id="cong-thuc">
+  <h2>料金計算式</h2>
+
+  <h3 id="cong-thuc-phi">定期料金と割引</h3>
+  <div class="formula">料金 = シート数 × 単価 × (1 − 割引率) + 加算する未払い金（> 0 の場合）      （結果はマイナスにならない）</div>
+  <ul>
+    <li>割引の出どころは2つ：<span class="ui">初月割引（%）</span>（管理者がプランに設定）と、法人ごとの個別割引（設定画面は未実装）。法人の個別割引が<b>優先</b>され、併用はされません。</li>
+    <li>割引が適用されるのは<b>初回の料金計算時</b>のみで、次回更新以降は適用されません。画面表示：<span class="ui">🎉 初月割引 {pct}%：-¥X</span>。</li>
+    <li>異常値：割引 > 100% → 料金 = 0；割引がマイナス → 無視；単価・シート数がマイナス → 0として計算；加算する未払い金がマイナス → 無視。割引が未払い金部分にも適用されるかはBDDに記載なし。</li>
+  </ul>
+  <div class="table-wrap"><table>
+    <thead><tr><th>シート</th><th class="num">単価</th><th>割引</th><th class="num">料金</th></tr></thead>
+    <tbody>
+      <tr><td>5</td><td class="num">1.000</td><td>—</td><td class="num">5.000</td></tr>
+      <tr><td>5</td><td class="num">1.000</td><td>150%</td><td class="num">0</td></tr>
+      <tr><td>5</td><td class="num">1.000</td><td>−20%</td><td class="num">5.000</td></tr>
+      <tr><td>5</td><td class="num">−1.000</td><td>—</td><td class="num">0</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3 id="cong-thuc-bac-thang">使用済み額とクレジット（月 → 四半期 → 年の段階計算）</h3>
+  <p>期間途中でアップグレードする場合、使用済み額は期間全体で均等に割るのではなく、価格の段階で計算します：1か月目は月額、2〜3か月目は四半期価格 − 月額の差額、4〜12か月目は年額 − 四半期価格の差額。各区間はその区間の実日数で均等に割ります。</p>
+  <div class="formula">区間1（1か月目）    ：日額 = 月額 / 1か月目の日数
+区間2（2〜3か月目）：日額 = (四半期価格 − 月額) / 2〜3か月目の日数
+区間3（4〜12か月目）：日額 = (年額 − 四半期価格) / 4〜12か月目の日数
+
+使用済み額       = Σ 日額 × 区間内の利用日数   （上限 = 現在のサイクルの価格）
+支払済み額       = 今期の直近の「成功」支払い
+クレジット             = max(0, 支払済み額 − 使用済み額)
+即時請求額       = max(0, 新プラン料金 − クレジット)</div>
+  <p>例：月額900、四半期1,510、年額4,250；期間開始 2026/04/01、1シート（実際は現在のシート数を掛ける）。</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>現在のサイクル</th><th class="num">支払済み</th><th>本日</th><th class="num">使用済み</th><th class="num">クレジット</th><th>計算方法</th></tr></thead>
+    <tbody>
+      <tr><td>月払い</td><td class="num">900</td><td>11/04</td><td class="num">300</td><td class="num">600</td><td>30/日 × 10</td></tr>
+      <tr><td>月払い</td><td class="num">900</td><td>01/05</td><td class="num">900</td><td class="num">0</td><td>期間終了</td></tr>
+      <tr><td>四半期払い</td><td class="num">1.510</td><td>11/04</td><td class="num">300</td><td class="num">1.210</td><td>1か月目内のため月払いと同じ</td></tr>
+      <tr><td>四半期払い</td><td class="num">1.510</td><td>21/05</td><td class="num">1.100</td><td class="num">410</td><td>900 + 10/日 × 20</td></tr>
+      <tr><td>年払い</td><td class="num">4.250</td><td>21/05</td><td class="num">1.100</td><td class="num">3.150</td><td>900 + 10 × 20</td></tr>
+      <tr><td>年払い</td><td class="num">4.250</td><td>20/08</td><td class="num">2.010</td><td class="num">2.240</td><td>900 + 610 + 10/日 × 50</td></tr>
+      <tr><td>年払い</td><td class="num">4.250</td><td>01/04/2027</td><td class="num">4.250</td><td class="num">0</td><td>期間終了</td></tr>
+      <tr><td>月払い</td><td class="num">500</td><td>01/05</td><td class="num">900</td><td class="num">0</td><td>使用済み額が支払済み額を超えるためクレジット = 0</td></tr>
+    </tbody>
+  </table></div>
+  <p>具体例：月払い、支払済み900、本日 04/11、料金2,000のプランに変更 → 使用済み300、クレジット600、即時請求額1,400。</p>
+
+  <h3>遅延中の未払い金</h3>
+  <div class="formula">未払い金 = 失敗した期間の合計金額 / 期間の実日数 × 猶予期間中の利用日数</div>
+  <div class="table-wrap"><table>
+    <thead><tr><th class="num">失敗した期間の合計</th><th class="num">期間の日数</th><th class="num">猶予日数</th><th class="num">未払い金</th></tr></thead>
+    <tbody>
+      <tr><td class="num">3.000</td><td class="num">30</td><td class="num">7</td><td class="num">700</td></tr>
+      <tr><td class="num">3.100</td><td class="num">31</td><td class="num">7</td><td class="num">700</td></tr>
+    </tbody>
+  </table></div>
+  <p>Freeへの移行が遅れて9日目に発生した場合、未払い金は7日固定ではなく実際の9日で計算します。</p>
+
+  <h3>3サイクル別のプラン価格（管理者が入力）</h3>
+  <p>画面<span class="ui">プラン管理（マスタ）</span>で、管理者は3つの価格を直接入力します：<span class="ui">単価 / 月（¥）</span>、<span class="ui">単価 / 四半期（¥）</span>、<span class="ui">単価 / 年（¥）</span>。プラン一覧には四半期・年サイクルの月額換算での割引率が自動表示されます。</p>
+  <p>例：1,000/月、2,700/四半期、9,600/年 → 四半期は10%お得、年は20%お得。システムの換算・保存方法は<a href="#pl-tinh-toan">付録</a>。</p>
+
+  <h3>追加プランの日額</h3>
+  <p>管理者は追加プランの1日あたりの価格を入力します。追加プランの請求はすべて日額 × 日数です。日数は暦日で数え、時間は考慮しません：何時に登録しても1日分として計算します。</p>
+  <div class="formula">初回期間の料金     = 日額 × 本日から新期間開始日までの日数
+各更新期間の料金   = 日額 × その期間の日数
+追加登録の料金     = 日額 × 共通支払日までの残り日数</div>
+  <div class="table-wrap"><table>
+    <thead><tr><th class="num">日額</th><th>請求項目</th><th class="num">日数</th><th class="num">金額</th></tr></thead>
+    <tbody>
+      <tr><td class="num">100</td><td>初回期間</td><td class="num">20</td><td class="num">2.000</td></tr>
+      <tr><td class="num">100</td><td>更新、31日の月</td><td class="num">31</td><td class="num">3.100</td></tr>
+      <tr><td class="num">100</td><td>更新、30日の月</td><td class="num">30</td><td class="num">3.000</td></tr>
+      <tr><td class="num">100</td><td>更新、28日の月</td><td class="num">28</td><td class="num">2.800</td></tr>
+      <tr><td class="num">100</td><td>追加登録、共通支払日まで残り12日</td><td class="num">12</td><td class="num">1.200</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="that-bai-no">
+  <h2>支払い失敗と未払い金</h2>
+  <ol class="flow">
+    <li>更新失敗 → ステータス「支払い遅延」、バナーを表示<span class="ui">前回のお支払いが完了しませんでした…残りN日…</span>。<span class="ui">支払い履歴</span>に1行追加<span class="ui">失敗</span>、<span class="ui">種別</span> <span class="ui">自動</span>；再請求に失敗するたびに1行追加。猶予期間のカウントは最初の失敗時点からのみ開始します。</li>
+    <li>システムは7日間自動で再請求を試みます。テナントもボタン<span class="ui">今すぐ支払う</span>を押して未払いの請求書を再決済できます。</li>
+    <li>請求成功 → 「有効」に戻り、バナーは消えます。</li>
+    <li>7日経過しても請求できない → アカウントはFreeへ、ステータス「未払い」、未払い金が発生。バナー：<span class="ui">未払いのためプランがFreeに移行されました。未払い金 ¥X…</span></li>
+    <li>有料プランに戻る → 未払い金を新プラン料金と同時に請求（CHG-11）。</li>
+  </ol>
+
+  <div class="table-wrap"><table class="cases">
+    <thead><tr><th>ID</th><th>状況</th><th>結果</th><th>エラーコード</th></tr></thead>
+    <tbody>
+      <tr><td class="id">DEB-01</td><td>遅延から3日目</td><td>まだFreeへは移行せず、システムは自動再請求を継続。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">DEB-02</td><td>7日経過</td><td>Freeへ、「未払い」、計算式どおりの未払い金、シート数をリセット（<a href="#huy-goi">Freeに戻ったときのシート数</a>）。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">DEB-03</td><td>7日経過したが決済ゲートウェイ側でプランを停止できなかった</td><td>「支払い遅延」のまま、未払い金はまだ記録しない — Freeに移行した直後に請求が通ってしまうのを防ぐため。</td><td><span class="b warn">変更なし</span></td></tr>
+      <tr><td class="id">DEB-04</td><td>遅延チェックが1日に2回実行された</td><td>Freeへの移行や未払い金の記録が2回行われることはない。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">DEB-05</td><td>操作：<span class="ui">今すぐ支払う</span>（支払い遅延中）</td><td>直近の失敗した請求書を再決済。メッセージ<span class="ui">お支払いのリクエストを送信しました。結果が出しだい反映されます</span>。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">DEB-06</td><td>操作：<span class="ui">今すぐ支払う</span>（遅延していないとき）</td><td>ブロック。</td><td><span class="b err">NOT_PAST_DUE</span></td></tr>
+      <tr><td class="id">DEB-07</td><td>失敗した請求書が古いデータのもので、再決済できない</td><td>ブロック。</td><td><span class="b err">INVOICE_NOT_FOUND</span></td></tr>
+      <tr><td class="id">DEB-08</td><td>有料プランに戻る際に未払い金を完済</td><td><span class="ui">現在の未払い金</span>は0に。請求書には次の行<span class="ui">未払い残高（前期）</span>（元の未払い金額と同額）。</td><td><span class="b ok">OK</span></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="phuong-thuc">
+  <h2>支払いカード</h2>
+  <p>管理するタブ：<span class="ui">支払い方法</span>。1アカウントで複数のカードを登録でき、<span class="ui">デフォルト</span>のカードが自動請求に使われます。</p>
+  <div class="table-wrap"><table class="cases">
+    <thead><tr><th>ID</th><th>状況</th><th>結果</th><th>エラーコード</th></tr></thead>
+    <tbody>
+      <tr><td class="id">PM-02</td><td><span class="ui">新しいカードを追加</span>（カード未登録時）</td><td>カードは自動的に<span class="ui">デフォルト</span>。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">PM-03</td><td>2枚目のカードを追加</td><td>デフォルトのカードは変わりません。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">PM-04</td><td><span class="ui">デフォルトに設定</span>（別のカードに対して）</td><td>そのカードが<span class="ui">デフォルト</span>。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">PM-05</td><td><span class="ui">削除</span>（デフォルト以外のカード）</td><td>削除可能。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">PM-06</td><td>アカウントに属さないカードを削除</td><td>ブロック。</td><td><span class="b err">PAYMENT_METHOD_NOT_FOUND</span></td></tr>
+      <tr><td class="id">PM-07</td><td>デフォルトのカードを削除：Free利用中で未払い金なし、<b>または</b>解約申請済み（期間末にFreeへ）で未払い金なし</td><td>削除可能。他のカードがあれば、残りの1枚が自動的に<span class="ui">デフォルト</span>。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">PM-08</td><td>デフォルトのカードを削除：有料プラン利用中で解約申請なし、<b>または</b>未払い金あり（Freeでも）、<b>または</b>猶予期間中（解約申請済みでも）</td><td>ブロック。</td><td><span class="b err">DEFAULT_PAYMENT_METHOD_DELETE_BLOCKED</span></td></tr>
+      <tr><td class="id">PM-09</td><td>デフォルトのカードが決済ゲートウェイ上で直接削除された（アプリ外）</td><td>他のカードがあれば、残りの1枚が自動的に<span class="ui">デフォルト</span>。カードが残っていない、または削除されたのがデフォルト以外 → 変更なし。</td><td><span class="b ok">OK</span></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="ghe">
+  <h2>シート</h2>
+
+  <h3>メンバー招待のブロック</h3>
+  <div class="table-wrap"><table class="cases">
+    <thead><tr><th>ID</th><th>状況</th><th>結果</th><th>エラーコード</th></tr></thead>
+    <tbody>
+      <tr><td class="id">SEAT-01</td><td>Freeプランで、有効メンバー数がすでに<span class="ui">メンバー上限</span>（プラン設定による。5固定ではない）に達している</td><td>招待をブロック：<span class="ui">Freeプランのメンバー上限に達しました。メンバーを追加で招待するにはプランをアップグレードしてください。</span></td><td><span class="b err">SEAT_LIMIT_REACHED_FREE_PLAN</span></td></tr>
+      <tr><td class="id">SEAT-02</td><td>有料プランで、有効メンバー数がシート数に達している（<span class="ui">シートをすべて使用中</span>）</td><td>招待をブロック：<span class="ui">現在のメンバー上限に達しました。メンバーを追加で招待するにはシートを追加購入してください。</span></td><td><span class="b err">SEAT_LIMIT_REACHED_PAID_PLAN</span></td></tr>
+      <tr><td class="id">SEAT-03</td><td>有料プランで空きシートあり（<span class="ui">空きシート N</span>）</td><td>招待可能。</td><td><span class="b ok">OK</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>期間途中のシート追加</h3>
+  <p>入力：<span class="ui">追加シート数</span>、ボタン<span class="ui">シート追加を確定</span>。追加料金は期間の残り日数で日割り計算し、デフォルトのカードから自動で引き落とされます。画面メッセージ<span class="ui">シート追加のリクエストを受け付けました。お支払い完了後にシート数が更新されます</span>；<span class="ui">利用上限</span>のシート数は請求完了後にのみ変わります。</p>
+  <div class="table-wrap"><table class="cases">
+    <thead><tr><th>ID</th><th>状況</th><th>結果</th><th>エラーコード</th></tr></thead>
+    <tbody>
+      <tr><td class="id">SEAT-10</td><td>有料プラン「有効」、カードあり、2シート追加（3 → 5）</td><td>請求完了でシートが5になり、追加招待が可能に。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">SEAT-11</td><td>管理者が期間途中にプラン価格を変更し、新価格がすでに有効</td><td>追加シートは最新の単価で計算。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">SEAT-12</td><td>銀行が3Dセキュア認証を要求</td><td>銀行の認証画面を表示。失敗扱いにはならず、シート数とステータスは変わらない。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">SEAT-13</td><td>カード拒否</td><td><span class="ui">支払い履歴</span>に1行追加<span class="ui">失敗</span>（予定金額で）。シート数とステータスは変わらず、後から再請求されることもない。</td><td><span class="b err">SEAT_INCREASE_PAYMENT_FAILED</span></td></tr>
+      <tr><td class="id">SEAT-14</td><td>カード未登録</td><td>ブロック。</td><td><span class="b err">PAYMENT_METHOD_REQUIRED_FOR_SEAT_INCREASE</span></td></tr>
+      <tr><td class="id">SEAT-15</td><td>Free利用中</td><td>ブロック。</td><td><span class="b err">PAID_PLAN_REQUIRED</span></td></tr>
+      <tr><td class="id">SEAT-16</td><td>支払い遅延中</td><td>ブロック。</td><td><span class="b err">SUBSCRIPTION_PAST_DUE_ACTION_BLOCKED</span></td></tr>
+      <tr><td class="id">SEAT-17</td><td>トライアル中</td><td>ブロック；ボタン表示<span class="ui">🔒 支払って解除</span>。</td><td><span class="b err">SEAT_INCREASE_BLOCKED_DURING_TRIAL</span></td></tr>
+      <tr><td class="id">SEAT-18</td><td>個人プラン</td><td>常にブロック。</td><td><span class="b err">SEAT_INCREASE_BLOCKED_FOR_PERSONAL_TENANT</span></td></tr>
+      <tr><td class="id">SEAT-19</td><td>追加シート数 ≤ 0</td><td>入力欄でデータエラーを表示：<span class="ui">追加シート数</span>。</td><td><span class="b err">VALIDATION_ERROR</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>次回更新時のシート数</h3>
+  <ul>
+    <li>更新期間のシート数 ＝ ステータス<span class="ui">有効</span>のメンバー数（<span class="ui">支払日</span>の前日時点）。</li>
+    <li>プラン変更予約がある場合、次回更新時は予約時に選んだシート数を使い、メンバー数は数え直さない。</li>
+    <li>解約申請済みの場合、更新期間がないためシート数は確定しない。</li>
+  </ul>
+</section>
+
+<section id="gioi-han">
+  <h2>利用上限</h2>
+  <div class="formula">プロジェクト / ストレージ / AI利用量の上限 = プランの上限 + 利用中の追加プランの上限合計
+いずれかが「無制限」→ 合計も「無制限」
+シートはプランのみで決まり、追加プランでシートは増えない</div>
+  <p>追加プラン<span class="ui">有効</span>と<span class="ui">自動更新なし</span>（期間未終了）はいずれも加算されます。追加プランの上限は現在有効なリリーススケジュールに従い、将来のスケジュールはまだ適用されません。</p>
+  <div class="table-wrap"><table class="cases">
+    <thead><tr><th>ID</th><th>状況</th><th>結果</th><th>エラーコード</th></tr></thead>
+    <tbody>
+      <tr><td class="id">LIM-01</td><td>プロジェクト数（未削除）が上限に達した、または超えた</td><td>新規プロジェクト作成をブロック。</td><td><span class="b err">PROJECT_LIMIT_REACHED</span></td></tr>
+      <tr><td class="id">LIM-02</td><td>ストレージ容量を使い切った</td><td>ファイル追加をブロック。</td><td><span class="b err">STORAGE_LIMIT_REACHED</span></td></tr>
+      <tr><td class="id">LIM-03</td><td>上限<span class="ui">無制限</span></td><td>常に許可。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">LIM-05</td><td>追加プランの登録（初回または追加）</td><td>上限が増える<b>即時</b>。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">LIM-06</td><td>追加プランの自動更新を解除</td><td>プランが失効するまで上限はそのまま。完全に終了したプランは加算されなくなります。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">LIM-07</td><td>Freeプランの個人テナントでメンバー上限が5</td><td>シートは1のまま。</td><td><span class="b ok">OK</span></td></tr>
+    </tbody>
+  </table></div>
+  <p class="meta">LIM-04（上限が日次でリセットされる仕組み）は<a href="#pl-tinh-toan">付録</a>。</p>
+</section>
+
+<section id="admin">
+  <h2>管理者によるプラン管理</h2>
+
+  <h3>作成 / 価格変更</h3>
+  <div class="table-wrap"><table class="cases">
+    <thead><tr><th>ID</th><th>状況</th><th>結果</th><th>エラーコード</th></tr></thead>
+    <tbody>
+      <tr><td class="id">ADM-01</td><td>プラン作成</td><td>3つの価格（月/四半期/年）を<span class="ui">適用開始日</span>と共に保存。追加プランは日額1つのみで、即時有効。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">ADM-02</td><td>システムの無料プラン以外で価格 = 0（新規作成またはスケジュール登録）</td><td>ブロック：<span class="ui">プラン価格は0より大きくしてください。</span></td><td><span class="b err">PLAN_PRICE_MUST_BE_POSITIVE</span></td></tr>
+      <tr><td class="id">ADM-03</td><td>将来の適用開始日で価格を変更</td><td>3サイクルすべてに新しい<span class="ui">リリーススケジュール</span>を同じ適用開始日で作成。画面表示<span class="ui">リリーススケジュールあり：{価格}、{日付}から適用</span>。利用中の法人への事前通知メールの送信を1回だけ起動（<a href="#email">メール通知</a>）。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">ADM-04</td><td>待機中のリリーススケジュールを修正（同じ適用開始日）</td><td>待機中のスケジュールを上書きし、新規作成はしない。旧データとまったく同じ内容を送信 → 変更なし、通知なし。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">ADM-05</td><td>スケジュールがある状態で「新しいリリーススケジュールを作成」のチェックを外す</td><td>3サイクルすべての待機中スケジュールを削除。現在の価格はそのまま。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">ADM-06</td><td>システムの無料プランを新価格付きで編集</td><td>価格変更は無視（0のまま）、他の項目は更新される。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">ADM-07</td><td>追加プランに四半期/年価格付きでスケジュール登録</td><td>ブロック：<span class="ui">追加プランは日額1つのみ入力できます…</span></td><td><span class="b err">ADD_ON_PLAN_CANNOT_HAVE_MAIN_PLAN_FIELDS</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>プランのステータスとプラン一覧</h3>
+  <ul>
+    <li><span class="ui">ステータス</span>（プランの<span class="ui">有効</span> / <span class="ui">無効</span>）は有効なリリーススケジュールに従う。無効化が予定されたプランは適用開始日まで選択可能；無効中で将来に有効化予定のプランはまだ選択不可。</li>
+    <li>テナントが選べるプラン一覧はプランと追加プランが分かれており、有効なプランのみ表示；追加プランは日額表示で、サイクルなし。</li>
+    <li>管理者側のライセンス管理画面にはプランのみが表示され、追加プランは表示されない。</li>
+    <li>価格0の追加プランがシステムのFreeプランとして選ばれることはない。</li>
+  </ul>
+
+  <h3>プラン価格変更 — 利用中のテナントへの影響</h3>
+  <ul>
+    <li>利用中のテナントは現在の契約期間の終了まで旧価格を支払う。次回更新から、ただし<b>適用開始日より前にはならず</b>、新価格を支払う。進行中の期間の価格は再計算されない。</li>
+    <li>次回更新時にそのプランを使うテナントに適用：利用中で移行予約なし、またはこのプランへの移行予約あり。移行予約済み、削除済みテナント、終了済みプラン → 影響なし。</li>
+    <li>新価格の適用待ち中にテナントがプラン変更・解約 → テナントの最新の選択に従い、旧プランの新価格は適用されない。</li>
+    <li>適用開始日以降にテナントがシート追加 → 追加シートは新価格で計算。</li>
+    <li>追加プランの価格変更：新価格は次回更新時から適用され、影響するのは<span class="ui">定期更新</span>をオンにしているテナントのみ；進行中の期間は旧価格のまま。</li>
+  </ul>
+  <div class="callout future"><div><strong>業務仕様未確定</strong>
+    <ul>
+      <li>1回目の価格変更が各テナントに適用済みの後に2回目の変更をした場合：即時更新か、次回の処理を待つか。</li>
+      <li>1テナントへの新価格適用が適用開始日までにリトライ上限に達して失敗した場合：管理者への通知方法と受信者。</li>
+      <li>プラン価格変更の事前通知メールは14日前固定（<a href="#email">メール通知</a>）。検討中：事前通知日数の可変化（M日）、およびそのプランへの移行予約済み法人への送信。</li>
+    </ul>
+  </div></div>
+
+  <h3>プラン終了（無効化のスケジュール登録）</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>時点</th><th>処理</th><th>プラン</th><th>追加プラン</th></tr></thead>
+    <tbody>
+      <tr><td><b>14日前</b></td><td>法人オーナーにメール送信</td><td>利用中：「プラン終了のお知らせ」。移行予約済み：「予約取り消しのお知らせ」。削除済み法人：送信しない。</td><td>利用中かつ自動更新オンの法人のみ：「提供終了のお知らせ」。（価格変更：日額の旧価格/新価格を記載、例：4/日 → 7/日。）</td></tr>
+      <tr><td><b>2日前</b></td><td>テナントのプランを更新</td><td>利用中：自動で<span class="ui">解約申請済み</span>、期間終了時にFreeへ。移行予約済み：予約を取り消し、現在のプランを維持。すでに自ら解約済み：何もしない。</td><td>自動更新オン：<span class="ui">自動更新なし</span>に変更（価格変更：次回更新時は新価格に移行）。自動更新オフ：そのまま。</td></tr>
+    </tbody>
+  </table></div>
+  <p>上記の時点より前に管理者がスケジュールを取り消し・変更した場合、メール送信や更新は行われない。システムの無料プランは終了をスケジュールできない。</p>
+
+  <h3>プラン削除</h3>
+  <div class="table-wrap"><table class="cases">
+    <thead><tr><th>ID</th><th>状況</th><th>結果</th><th>エラーコード</th></tr></thead>
+    <tbody>
+      <tr><td class="id">ADM-20</td><td>利用法人なし、利用していたのは削除済み法人のみ、または追加プランで完全に終了した法人のみ</td><td>削除可能。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">ADM-21</td><td>稼働中の法人が利用中、移行予約中、または追加プランの更新を解除済みだが期間未終了</td><td>ブロック：<span class="ui">利用中の法人があるため、このプランは削除できません。</span></td><td><span class="b err">PLAN_STILL_IN_USE</span></td></tr>
+      <tr><td class="id">ADM-22</td><td>システムの無料プラン</td><td>常にブロック。</td><td><span class="b err">FREE_PLAN_CANNOT_BE_DELETED</span></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="email">
+  <h2>メール通知</h2>
+  <p>課金関連のメールは2つの送信元から：<b>アプリからの送信</b>（管理者による価格変更・プラン終了の事前通知、トライアル終了の事前通知）と<b>Stripeからの送信</b>（領収書、支払い失敗、更新リマインダーなど）。Stripeのメールはアプリのコードを経由しません。必要な場合はStripe Dashboardで有効化します。</p>
+
+  <h3>アプリから送信するメール</h3>
+  <p>送信先：<b>法人オーナー</b>（owner）、個人プランの場合はアカウント所有者。価格変更・プラン終了のメールは適用開始日の<b>14日前</b>、トライアル終了のメールは終了日の<b>3日前</b>に送信します。削除済み法人にはメールを送りません。</p>
+  <div class="table-wrap"><table class="cases">
+    <thead><tr><th>ID</th><th>メール種別</th><th>受信者</th><th>内容</th><th>送信しない場合</th></tr></thead>
+    <tbody>
+      <tr><td class="id">MAIL-01</td><td>プラン価格変更</td><td>プラン利用中の法人オーナー</td><td>法人名、プラン名、旧価格、新価格、適用開始日</td><td>送信日前に管理者が再度価格変更（旧価格のメールは破棄し、新しい処理を待つ）</td></tr>
+      <tr><td class="id">MAIL-02</td><td>プラン終了 — 「プラン終了のお知らせ」</td><td>プラン利用中の法人オーナー</td><td>プラン名、適用開始日</td><td>送信日前に管理者が終了スケジュールを取り消し</td></tr>
+      <tr><td class="id">MAIL-03</td><td>プラン終了 — 「予約取り消しのお知らせ」</td><td>次回更新時にそのプランへの移行を予約した法人オーナー</td><td>プラン名、適用開始日</td><td>送信日前に管理者が終了スケジュールを取り消し</td></tr>
+      <tr><td class="id">MAIL-04</td><td>追加プラン価格変更</td><td>利用中かつ<span class="ui">定期更新</span>がオンの法人のみ。自動更新オフ、またはそのプランを<span class="ui">更新を解除</span>した法人には送信しない。</td><td>日額の旧価格と新価格（例：4/日 → 7/日）</td><td>送信日前に管理者がスケジュールを取り消し・修正</td></tr>
+      <tr><td class="id">MAIL-05</td><td>追加プラン終了 — 「提供終了のお知らせ」</td><td>利用中かつ<span class="ui">定期更新</span>がオンの法人のみ</td><td>追加プランの提供終了</td><td>送信日前に管理者がスケジュールを取り消し・修正</td></tr>
+      <tr><td class="id">MAIL-06</td><td>トライアル終了の事前通知</td><td>トライアル中の法人オーナー / アカウント所有者</td><td>プラン名、シート数、トライアル終了日、初回支払日、初回期間の請求予定額、引き落とされるカード。請求を避けたい場合はトライアル終了日までに<span class="ui">プラン解約</span>を行うよう案内。</td><td>送信日前に解約済み、または<span class="ui">今すぐ支払う</span>済み（トライアル状態ではない）。デフォルトでトライアル状態のFreeアカウント（実際の有料プランなし）にも送信しない</td></tr>
+    </tbody>
+  </table></div>
+  <p><b>アプリ送信メールの共通ルール：</b></p>
+  <ul>
+    <li>各メールは<b>1回のみ</b>送信（受信者ごと、価格変更/プラン終了ごと。トライアル終了の事前通知はトライアル1回につき1通）；再実行しても重複送信しない。</li>
+    <li>送信エラー時は自動で再送；送信成功したメールは再送しない。</li>
+    <li>メール内容は常に最新の設定に従う：送信日前に管理者がスケジュールや価格を変更した場合、旧データのメールは送信されない。</li>
+  </ul>
+  <div class="callout future"><div><strong>業務仕様未確定</strong>事前通知日数の可変化（14日固定ではなくM日）、およびそのプランへの移行予約済み法人への価格変更メール。</div></div>
+
+  <h3>Stripeが送信するメール</h3>
+  <p>Stripeが以下のメールを送るのは<b>Stripe Dashboardで</b>有効化している場合のみです。本資料ではどの項目が有効かは確認していません — Stripeアカウント管理者が「有効化方法」列に従って確認してください。メニュー名はDashboardのバージョンにより多少異なる場合があります（<i>Subscriptions and emails</i>の一部項目は次へ移動済み：<i>Billing › Revenue recovery</i>）。</p>
+  <div class="table-wrap"><table class="cases">
+    <thead><tr><th>ID</th><th>メール種別</th><th>送信タイミング</th><th>Stripe Dashboardでの有効化方法</th><th>備考</th></tr></thead>
+    <tbody>
+      <tr><td class="id">STR-01</td><td>支払いの領収書</td><td>請求成功のたび：トライアル後の初回、更新、Free → 有料、アップグレード、シート追加、追加プラン、遅延時の再請求</td><td><b>Settings › Business › Customer emails</b> › オン<i>Successful payments</i></td><td>アプリの<span class="ui">成功</span>（<span class="ui">支払い履歴</span>）の行と並行して送信。</td></tr>
+      <tr><td class="id">STR-02</td><td>返金</td><td>支払いを返金したとき</td><td><b>Settings › Business › Customer emails</b> › オン<i>Refunds</i></td><td>アプリにはテナント向けの返金表示ラベルがまだない（付録のWH-11）。</td></tr>
+      <tr><td class="id">STR-03</td><td>支払い失敗</td><td>自動請求（更新）の失敗、およびStripeの自動再請求中 — つまりアカウントが支払い遅延のとき</td><td><b>Settings › Billing › Subscriptions and emails</b>（または<b>Revenue recovery</b>）› オン<i>Send emails when card payments fail</i>；カード更新リンクを選択：Stripeのページまたは独自リンク</td><td>独自リンクはアプリのタブ<span class="ui">支払い方法</span>を指定し、テナントがアプリ上でカードを更新できるようにするのがおすすめ。テナントには同時に遅延バナーも表示される。</td></tr>
+      <tr><td class="id">STR-04</td><td>3Dセキュア認証の要求</td><td>テナント不在時の自動請求（更新）で銀行が認証を要求した場合</td><td><b>Settings › Billing › Subscriptions and emails</b> › 3Dセキュア認証が必要な支払いの管理 › Stripeホストの認証リンク送信をオン</td><td>テナントが操作中（例：シート追加）の場合はアプリが認証画面を表示（SEAT-12）、メール不要。</td></tr>
+      <tr><td class="id">STR-05</td><td>更新リマインダー</td><td>新しい期間の更新日の前</td><td><b>Settings › Billing › Subscriptions and emails</b> › オン<i>Send emails about upcoming renewals</i>、事前通知日数を選択</td><td>事前通知日数はDashboardで設定し、アプリ側にはない。</td></tr>
+      <tr><td class="id">STR-06</td><td>トライアル終了リマインダー</td><td>トライアル終了の7日前</td><td><b>Settings › Billing › Subscriptions and emails</b> › オン<i>Send a reminder email 7 days before a free trial ends</i></td><td>アプリのトライアルは14日間 → メールは7日目ごろに届く。アプリ自身がトライアル終了の事前通知（MAIL-06）を送るため、同じ内容のメールが2通届かないよう、この項目はオフにしておく。</td></tr>
+      <tr><td class="id">STR-07</td><td>カードの有効期限切れ間近</td><td>デフォルトのカードの有効期限が近い</td><td><b>Settings › Billing › Subscriptions and emails</b> › オン<i>Send emails about expiring cards</i></td><td>期限切れカードによる更新失敗の防止に役立つ。</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout warn"><div><strong>Stripeメールの共通注意点</strong>
+    <ul>
+      <li><b>受信者</b>は法人のStripe顧客情報のメールアドレス。このメールは顧客情報を最初に作成した操作（有料プラン登録、最初のカード追加、または最初の追加プラン登録）の実行者から取得され、アプリはその後更新しません。法人オーナーやメールアドレスが変わっても、Stripeのメールは旧アドレスに届きます。</li>
+      <li><b>言語</b>：アプリはStripeに言語を渡していないため、メールはStripeのデフォルト言語となり、テナントがアプリで選んだ言語には従いません。</li>
+      <li><b>ロゴ、色、名称、サポートメール</b>（メールに表示）の設定場所：<b>Settings › Business › Branding</b>と<b>Public details</b>。</li>
+      <li><b>Test mode</b>：Stripeはこれらのメールを実際の顧客には送らない（Stripeアカウントのメンバーのメールにのみ送信）。実メールのテストにはlive modeかチームメンバーのメールを使用。</li>
+    </ul>
+  </div></div>
+</section>
+
+<section id="ma-loi">
+  <h2>エラーコード一覧</h2>
+  <p>「テナント側の表示メッセージ」列はアプリの文言そのままです。「—」はそのコード専用のメッセージがまだないことを示します。</p>
+  <div class="callout warn"><div><strong>アプリ上の文言と本資料の呼び方にズレがある箇所</strong>
+    <ul>
+      <li>追加プランのエラーメッセージでは<span class="ui">締め日</span>、登録画面では<span class="ui">新期間の開始日</span>— 同じ日を指します。本資料では「新期間の開始日」と表記。</li>
+      <li>メッセージ<code>PAYMENT_METHOD_REQUIRED_FOR_ADDON_REGISTRATION</code>では「plan bổ sung」、画面では<span class="ui">追加プラン</span>。本資料では「追加プラン」と表記。</li>
+      <li>メンバーのステータス：タブ<span class="ui">メンバー一覧</span>では<span class="ui">有効</span> / <span class="ui">停止中</span>、ユーザー管理画面では<span class="ui">有効</span> / <span class="ui">無効</span>。本資料では「有効 / 停止中」と表記。</li>
+      <li>シート数：<span class="ui">利用上限</span>とシート追加ボタンは「シート」、プラン変更時の選択欄は<span class="ui">メンバー数</span> /「人」を使用。本資料では購入したシート数を「シート」、人数を「メンバー数」と表記。</li>
+    </ul>
+  </div></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>エラーコード</th><th>意味</th><th>テナント側の表示メッセージ</th><th>ケース</th></tr></thead>
+    <tbody>
+      <tr><td><code>EMAIL_ALREADY_EXISTS</code></td><td>使用済みのメール</td><td>このメールアドレスはすでに登録されています。別のメールアドレスを使用するか、ログインしてください。</td><td>REG-06</td></tr>
+      <tr><td><code>EMAIL_NOT_DELIVERABLE</code></td><td>メールを受信できないアドレス</td><td class="muted">—</td><td>REG-07</td></tr>
+      <tr><td><code>PLAN_NOT_FOUND</code></td><td>プランが存在しない、停止済み、または操作に対して種類が不正</td><td class="muted">—</td><td>REG-08, TRL-06, CHG-05, ADD-08</td></tr>
+      <tr><td><code>PAYMENT_METHOD_REQUIRED_FOR_TRIAL</code></td><td>カードなしで有料プランに登録</td><td class="muted">—</td><td>REG-02</td></tr>
+      <tr><td><code>TRIAL_ALREADY_USED</code></td><td>トライアル利用済み</td><td>以前にトライアルを利用済みのため、再度トライアルはできません。</td><td>TRL-02</td></tr>
+      <tr><td><code>PLAN_NOT_ELIGIBLE_FOR_TRIAL</code></td><td>無料プランはトライアル不可</td><td>このプランはトライアルに対応していません。</td><td>TRL-03</td></tr>
+      <tr><td><code>TRIAL_ONLY_AVAILABLE_FROM_FREE_PLAN</code></td><td>トライアルはFreeからのみ</td><td>トライアルは無料プラン利用中のみ可能です。</td><td>TRL-04</td></tr>
+      <tr><td><code>TRIAL_NOT_AVAILABLE_WITH_OUTSTANDING_DEBT</code></td><td>未払い金があるとトライアル不可</td><td>トライアルの前に未払い金をお支払いください。</td><td>TRL-14</td></tr>
+      <tr><td><code>NOT_IN_TRIAL</code></td><td>トライアル中ではない</td><td>現在アカウントはトライアル期間中ではありません。</td><td>TRL-08</td></tr>
+      <tr><td><code>PAID_PLAN_REQUIRED</code></td><td>有料プラン利用中のみ利用可能</td><td class="muted">—</td><td>TRL-09, SEAT-15</td></tr>
+      <tr><td><code>PLAN_CHANGE_NOT_ALLOWED_WHILE_TRIALING</code></td><td>トライアル中はプラン変更不可</td><td>トライアル中は別の有料プランへ変更できません…</td><td>TRL-10, CHG-06</td></tr>
+      <tr><td><code>PAYMENT_METHOD_REQUIRED_FOR_PLAN_CHANGE</code></td><td>カード未登録で有料プランへ</td><td>プランを変更する前に支払い方法を追加してください。</td><td>CHG-01</td></tr>
+      <tr><td><code>SEAT_COUNT_INVALID_FOR_PERSONAL_TENANT</code></td><td>個人プランで1以外のシート数を選択</td><td class="muted">—</td><td>CHG-02</td></tr>
+      <tr><td><code>SEAT_COUNT_BELOW_ACTIVE_MEMBER_COUNT</code></td><td>シート数が有効メンバー数より少ない</td><td class="muted">—</td><td>TRL-05, CHG-03</td></tr>
+      <tr><td><code>PENDING_PLAN_SCHEDULE_EXISTS</code></td><td>プラン変更予約あり</td><td>次回更新時に適用待ちのプラン変更予約があります。先にその予約を取り消してください…</td><td>CHG-04, CAN-03</td></tr>
+      <tr><td><code>PENDING_PLAN_SCHEDULE_NOT_FOUND</code></td><td>適用待ちのプランなし</td><td>現在、適用待ちのプラン変更予約はありません。</td><td>CAN-11</td></tr>
+      <tr><td><code>SUBSCRIPTION_ALREADY_CANCELLED</code></td><td>解約申請済み</td><td>このプランはすでに解約済みで、Freeプランへの移行を待っています。</td><td>CAN-04</td></tr>
+      <tr><td><code>ALREADY_ON_FREE_PLAN</code></td><td>解約できる有料プランがない</td><td class="muted">—</td><td>CAN-07</td></tr>
+      <tr><td><code>NOT_PAST_DUE</code></td><td>支払い遅延ではない</td><td>サブスクリプションは現在、支払い遅延の状態ではありません。</td><td>DEB-06</td></tr>
+      <tr><td><code>INVOICE_NOT_FOUND</code></td><td>再決済する失敗請求書が見つからない</td><td>再決済が必要な請求書が見つかりません。サポートにお問い合わせください。</td><td>DEB-07</td></tr>
+      <tr><td><code>PAYMENT_METHOD_NOT_FOUND</code></td><td>アカウントに属さないカード</td><td class="muted">—</td><td>PM-06</td></tr>
+      <tr><td><code>DEFAULT_PAYMENT_METHOD_DELETE_BLOCKED</code></td><td>現時点ではデフォルトのカードを削除できない</td><td>有料プラン利用中、未払い金あり、または猶予期間中はデフォルトのカードを削除できません…</td><td>PM-08</td></tr>
+      <tr><td><code>SEAT_LIMIT_REACHED_FREE_PLAN</code></td><td>Freeプランのシート上限</td><td>Freeプランのメンバー上限に達しました。プランをアップグレードしてください…</td><td>SEAT-01</td></tr>
+      <tr><td><code>SEAT_LIMIT_REACHED_PAID_PLAN</code></td><td>有料プランのシート上限</td><td>現在のメンバー上限に達しました。シートを追加購入してください…</td><td>SEAT-02</td></tr>
+      <tr><td><code>SEAT_INCREASE_PAYMENT_FAILED</code></td><td>シート追加時にカード拒否</td><td>シート追加の差額を請求できませんでした…</td><td>SEAT-13</td></tr>
+      <tr><td><code>PAYMENT_METHOD_REQUIRED_FOR_SEAT_INCREASE</code></td><td>カード未登録でシート追加</td><td>シートを追加購入する前に支払い方法を追加してください。</td><td>SEAT-14</td></tr>
+      <tr><td><code>SUBSCRIPTION_PAST_DUE_ACTION_BLOCKED</code></td><td>支払い遅延中は操作をロック</td><td class="muted">—</td><td>SEAT-16</td></tr>
+      <tr><td><code>SEAT_INCREASE_BLOCKED_DURING_TRIAL</code></td><td>トライアル中はシート追加不可</td><td>トライアル中はメンバー数を増やせません…</td><td>SEAT-17</td></tr>
+      <tr><td><code>SEAT_INCREASE_BLOCKED_FOR_PERSONAL_TENANT</code></td><td>個人プランはシート追加不可</td><td class="muted">—</td><td>SEAT-18</td></tr>
+      <tr><td><code>VALIDATION_ERROR</code></td><td>入力データが不正</td><td>送信されたデータが不正です。もう一度ご確認ください。</td><td>SEAT-19</td></tr>
+      <tr><td><code>PROJECT_LIMIT_REACHED</code></td><td>プロジェクト上限に到達</td><td class="muted">—</td><td>LIM-01</td></tr>
+      <tr><td><code>STORAGE_LIMIT_REACHED</code></td><td>ストレージ容量不足</td><td class="muted">—</td><td>LIM-02</td></tr>
+      <tr><td><code>END_DATE_AND_AUTO_RENEW_REQUIRED_FOR_FIRST_ADDON</code></td><td>初回の追加プラン登録で日付または自動更新の選択が未指定</td><td class="muted">—（アプリにはコード<code>END_DATE_REQUIRED_FOR_FIRST_ADDON</code>）</td><td>ADD-03</td></tr>
+      <tr><td><code>END_DATE_REQUIRED_FOR_FIRST_ADDON</code></td><td>初回の追加プランの金額を日付未選択でプレビュー</td><td>最初の追加プランの締め日を選択してください。</td><td>ADD-15</td></tr>
+      <tr><td><code>END_DATE_MUST_BE_IN_FUTURE_FOR_FIRST_ADDON</code></td><td>新期間の開始日は明日以降である必要あり</td><td>締め日は本日より後にしてください。</td><td>ADD-04</td></tr>
+      <tr><td><code>END_DATE_EXCEEDS_ONE_YEAR_FOR_FIRST_ADDON</code></td><td>新期間の開始日が1年超</td><td>締め日は本日から1年以内にしてください。</td><td>ADD-05</td></tr>
+      <tr><td><code>PAYMENT_METHOD_REQUIRED_FOR_ADDON_REGISTRATION</code></td><td>カード未登録で追加プランを登録</td><td>追加プランを登録する前に支払い方法を追加してください。</td><td>ADD-06</td></tr>
+      <tr><td><code>PLAN_IS_NOT_ADD_ON</code></td><td>追加プランではない</td><td class="muted">—</td><td>ADD-07</td></tr>
+      <tr><td><code>ADDON_PLAN_ALREADY_REGISTERED</code></td><td>利用中の追加プラン</td><td>この追加プランはすでに利用中です。</td><td>ADD-09</td></tr>
+      <tr><td><code>NO_ACTIVE_ADDON_SUBSCRIPTION</code></td><td>自動更新を切り替える追加プランがない</td><td class="muted">—</td><td>ADD-22</td></tr>
+      <tr><td><code>ADDON_AUTO_RENEW_DISABLED</code></td><td>定期更新がオフ</td><td>定期更新がオフです — 追加プランは期間終了時に自動で終了します…</td><td>ADD-25</td></tr>
+      <tr><td><code>ADDON_ITEM_NOT_FOUND</code></td><td>追加プランが存在しない</td><td class="muted">—</td><td>ADD-26</td></tr>
+      <tr><td><code>PLAN_PRICE_MUST_BE_POSITIVE</code></td><td>価格は0より大きく</td><td>プラン価格は0より大きくしてください。</td><td>ADM-02</td></tr>
+      <tr><td><code>ADD_ON_PLAN_CANNOT_HAVE_MAIN_PLAN_FIELDS</code></td><td>追加プランに四半期/年価格を入力</td><td>追加プランは日額1つのみ入力でき、期間ごとの割引率は入力できません。</td><td>ADM-07</td></tr>
+      <tr><td><code>PLAN_STILL_IN_USE</code></td><td>利用中の法人があるプラン</td><td>利用中の法人があるため、このプランは削除できません。</td><td>ADM-21</td></tr>
+      <tr><td><code>FREE_PLAN_CANNOT_BE_DELETED</code></td><td>システムの無料プランは削除不可</td><td class="muted">—</td><td>ADM-22</td></tr>
+      <tr><td><code>PAYMENT_DECLINED</code></td><td>カード拒否</td><td>お支払いカードが拒否されました。カード情報を確認するか、別のカードをご利用ください。</td><td>ADD-11</td></tr>
+      <tr><td><code>PAYMENT_METHOD_REQUIRED</code></td><td>デフォルトのカードが未登録</td><td>続行するには支払い方法を追加してください。</td><td><a href="#pl-luu-vet">付録</a></td></tr>
+      <tr><td><code>STRIPE_UNAVAILABLE</code></td><td>決済ゲートウェイの一時的なエラー</td><td>決済サービスが一時的に応答していません。しばらくしてから再度お試しください。</td><td><a href="#pl-luu-vet">付録</a></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="nguon-bdd">
+  <h2>BDDソース</h2>
+  <p>ルートフォルダ：<code>EMIND25T04_AI-PLF-BE/test-bdd/</code>。</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>項目</th><th>.featureファイル</th></tr></thead>
+    <tbody>
+      <tr><td>登録</td><td><code>billing/trial-registration</code>、<code>register-free-plan-seat-limit</code>、<code>register-payment-failed</code>、<code>main-plan-only-listing</code>、<code>stripe-create-subscription</code></td></tr>
+      <tr><td>トライアル</td><td><code>billing/plan-start-trial</code>、<code>trial-settle-now</code></td></tr>
+      <tr><td>プラン変更</td><td><code>billing/plan-switch-trial</code>、<code>plan-change-proration</code>、<code>plan-change-preview</code>、<code>plan-change-billing-cycle</code>、<code>plan-change-credit-seat-basis</code>、<code>plan-change-fee-log-audit</code>、<code>plan-change-seat-count-guard</code>、<code>plan-change-past-due-seat-count</code>、<code>plan-change-pending-schedule-guard</code>、<code>plan-upgrade-active-seat-count</code>、<code>payment-method-required-for-plan-change</code>、<code>unused-credit</code>、<code>plan-type-guard</code></td></tr>
+      <tr><td>プラン解約</td><td><code>billing/cancel-to-free</code>、<code>cancel-pending-plan-schedule</code>、<code>subscription-canceled-downgrade-to-free</code>、<code>stripe-schedule-cancel-at-period-end</code></td></tr>
+      <tr><td>計算式</td><td><code>billing/fee-calculation-formula</code>、<code>discount-coupon</code>、<code>billing-core-usage-and-credit</code>、<code>billing-core-new-plan-invoice-amount</code>、<code>billing-core-plan-change-invoice</code>、<code>billing-core-is-upgrade</code>、<code>grace-debt-formula</code></td></tr>
+      <tr><td>支払い失敗と未払い金</td><td><code>billing/invoice-payment-failed-webhook</code>、<code>dunning-retry</code>、<code>debt-resume</code>、<code>tenant-debt-ledger</code>、<code>tenant-subscription/retry-payment</code></td></tr>
+      <tr><td>支払いカード</td><td><code>billing/payment-method</code>、<code>payment-method-detached-webhook</code></td></tr>
+      <tr><td>シート</td><td><code>billing/increase-seat</code>、<code>increase-seat-payment-behavior</code>、<code>increase-seat-webhook-confirmation</code>、<code>seat-limit-enforcement</code>、<code>tenant-subscription/current-subscription-active-member-count</code></td></tr>
+      <tr><td>利用上限</td><td><code>billing/plan-limit-enforcement</code>、<code>common/resource-limit/tenant-resource-limit</code></td></tr>
+      <tr><td>追加プラン</td><td><code>billing/addon-plan-billing-flow</code>、<code>addon-plan-subscription</code>、<code>addon-plan-schedule</code>、<code>addon-plan-pricing-from-schedule</code>、<code>addon-subscription-webhook</code></td></tr>
+      <tr><td>Admin</td><td><code>billing/admin-plan-multi-cycle-pricing</code>、<code>admin-price-change-bulk-subscription</code>、<code>admin-price-change-notify-email</code>、<code>plan-close-schedule</code>、<code>plan-status-from-schedule</code>、<code>admin-delete-plan</code>、<code>stripe-product-per-plan</code></td></tr>
+      <tr><td>メール通知</td><td><code>mail/plan-price-change-mail-notice-fan-out</code>、<code>mail/mail-processor</code>、<code>mail/render-mail-template</code>、<code>billing/plan-close-schedule</code>、<code>addon-plan-schedule</code>、<code>admin-price-change-notify-email</code></td></tr>
+      <tr><td>技術付録</td><td><code>billing/invoice-paid-webhook</code>、<code>invoice-refund-webhook</code>、<code>subscription-updated-webhook</code>、<code>stripe-webhook-event-queue</code>、<code>subscription-schedule-sync</code>、<code>subscription-schedule-phase-end-date</code>、<code>stripe-invoice-and-schedule-phases</code>、<code>stripe-api-call-log</code>、<code>common/stripe-error-mapping</code></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="phu-luc" class="appendix-head">
+  <h1>技術付録</h1>
+  <p>開発者・QA向け：上記のケースをシステムがStripe、バックグラウンドジョブ、ログデータでどう実現しているか。テナントからは見えない部分です。テーブル名、データ項目、Stripeパラメータは検索しやすいよう原文のまま記載しています。</p>
+</section>
+
+<section id="pl-thuat-ngu">
+  <h2>技術用語対照</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>コード / DB</th><th>本資料 / 画面での呼び方</th></tr></thead>
+    <tbody>
+      <tr><td><code>MAIN</code> / <code>ADD_ON</code></td><td>プラン / 追加プラン</td></tr>
+      <tr><td><code>unitPrice = 0</code></td><td>Freeプラン（<span class="ui">無料</span>）</td></tr>
+      <tr><td><code>level</code></td><td>プランのランク（非表示）；管理画面の<span class="ui">表示順</span>とは別</td></tr>
+      <tr><td><code>billingCycle</code> 1/3/12</td><td><span class="ui">月払い / 四半期払い / 年払い</span></td></tr>
+      <tr><td><code>PERSONAL</code> / <code>ORGANIZATION</code></td><td>個人プラン / 法人プラン</td></tr>
+      <tr><td><code>maxSeatCount</code></td><td>シート；Freeプランでは<span class="ui">メンバー上限</span></td></tr>
+      <tr><td><code>seatCount</code>（プラン変更/トライアル時）</td><td>選択したシート、入力欄<span class="ui">メンバー数</span></td></tr>
+      <tr><td><code>activeMemberCount</code></td><td>メンバー数<span class="ui">有効</span></td></tr>
+      <tr><td><code>pendingSeatCount</code></td><td>プラン変更予約時に選んだシート</td></tr>
+      <tr><td><code>currentPeriodStart/End</code></td><td><span class="ui">請求期間</span>、<span class="ui">支払日</span></td></tr>
+      <tr><td><code>trialEndsAt</code>、<code>billingAnchorAt</code></td><td>トライアル終了日、初回支払日（＝その翌日）</td></tr>
+      <tr><td><code>pastDueSince</code></td><td>初回の更新失敗日（猶予期間カウントの起点）</td></tr>
+      <tr><td><code>outstandingDebtAmount</code></td><td><span class="ui">現在の未払い金</span></td></tr>
+      <tr><td><code>paidMonthCount</code></td><td>課金済みの月数（0 ＝ 初回課金、割引あり）</td></tr>
+      <tr><td><code>cancelAtPeriodEnd</code></td><td><span class="ui">解約申請済み</span></td></tr>
+      <tr><td><code>discountSource</code> TENANT/PLAN/NONE</td><td>法人の個別割引 / <span class="ui">初月割引</span>（プランの）/ 割引なし</td></tr>
+      <tr><td><code>chargeNow</code>、<code>effectiveDate</code></td><td><span class="ui">即時請求額</span>、適用時期</td></tr>
+      <tr><td><code>usedAmount</code>、<code>creditAmount</code>、<code>creditApplied</code></td><td>使用済み額、<span class="ui">今期支払済み（クレジット）</span>、<span class="ui">旧プランの未使用期間分クレジット</span></td></tr>
+      <tr><td><code>originalAmount</code> / <code>amount</code></td><td><span class="ui">合計金額（概算）</span> / <span class="ui">支払済み</span></td></tr>
+      <tr><td>Invoice <code>PAID</code> / <code>FAILED</code></td><td><span class="ui">成功</span> / <span class="ui">失敗</span></td></tr>
+      <tr><td><code>transactionType</code> AUTO / MANUAL</td><td><span class="ui">自動</span> / <span class="ui">手動</span></td></tr>
+      <tr><td>Member ACTIVE / SUSPENDED</td><td><span class="ui">有効</span> / <span class="ui">停止中</span></td></tr>
+      <tr><td>Add-on item ACTIVE / PENDING_CANCEL / CANCELED</td><td><span class="ui">有効</span> / <span class="ui">自動更新なし</span> / 表示されなくなる</td></tr>
+      <tr><td><code>autoRenew</code></td><td><span class="ui">定期更新</span></td></tr>
+      <tr><td>Add-on <code>currentPeriodEnd</code>初回（endDate）</td><td><span class="ui">新期間の開始日</span></td></tr>
+      <tr><td>Plan schedule ACTIVE / INACTIVE</td><td><span class="ui">有効</span> / <span class="ui">無効</span>；<code>PlanPricingSchedule</code> = <span class="ui">リリーススケジュール</span></td></tr>
+      <tr><td><code>maxProjects</code> / <code>storageLimit</code> / <code>aiUsageLimit</code>, −1</td><td><span class="ui">プロジェクト</span> / <span class="ui">ストレージ</span> / <span class="ui">AI利用量</span>、<span class="ui">無制限</span></td></tr>
+      <tr><td><code>TenantResourceLimit</code></td><td><span class="ui">利用上限</span></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="pl-luong">
+  <h2>ケース別技術詳細</h2>
+  <div class="table-wrap"><table class="cases">
+    <thead><tr><th>ケース</th><th>システムでの実装</th></tr></thead>
+    <tbody>
+      <tr><td class="id">REG-01</td><td>実際のStripe Subscriptionを次の設定で作成：<code>trial_period_days=14</code>；<code>trialEndsAt</code>、<code>billingAnchorAt</code>、<code>currentPeriodStart/End</code>はStripeの同期レスポンスからそのまま記録。入力された支払い方法をStripe customerのdefaultに設定。</td></tr>
+      <tr><td class="id">REG-04</td><td>Invoice PAIDはwebhook経由でのみ記録<code>invoice.paid</code>、API呼び出し時には記録しない（例外：CHG-11）。</td></tr>
+      <tr><td class="id">REG-05</td><td>StripeがSubscription作成を拒否 → subscriptionはFreeプランへ、<code>UNPAID</code>、<code>outstandingDebtAmount=0</code>；プラン価格で1件のinvoice FAILED、<code>failureReason</code>＝Stripeのエラー。</td></tr>
+      <tr><td class="id">TRL-01</td><td>Stripe Subscriptionには次を設定：<code>trial_period_days=14</code>；<code>trialEndsAt</code>、値の取得元：<code>trial_end</code>；<code>billingAnchorAt</code>＝その翌日。</td></tr>
+      <tr><td class="id">TRL-07</td><td>Stripeを呼び出してトライアルを即時終了。<code>invoice.paid</code>: ACTIVE, <code>paidMonthCount += billingCycle</code>（例：四半期サイクルなら+3）。</td></tr>
+      <tr><td class="id">TRL-12</td><td>Stripe Subscriptionを即時解約（次は使わない：<code>cancel_at_period_end</code>）；<code>cancelAtPeriodEnd</code>はfalseのまま；トライアル利用済みフラグは保持。</td></tr>
+      <tr><td class="id">TRL-13</td><td>トライアル付きsubscription作成時にStripeが作る0円のInvoice → invoice/fee logは記録しない、<code>paidMonthCount</code>は0のまま。</td></tr>
+      <tr><td class="id">CHG-10</td><td>トライアルなしでStripe Subscriptionを作成；<code>billingAnchorAt</code> = <code>currentPeriodStart</code>（Stripeのresponse内）。</td></tr>
+      <tr><td class="id">CHG-11</td><td>未払い金と同額のpending invoice itemを<b>Subscription作成の前に</b>作成。InvoiceはすぐにPAIDで記録（PENDINGではない）、合計＝未払い金＋新期間料金；<code>originalAmount</code>＝新プランの元価格（未払い金は含まない）。Fee logは該当invoiceを参照。debt ledgerの未払い金には次が紐づけられる：<code>invoiceId</code>、元の金額はそのまま。</td></tr>
+      <tr><td class="id">アップグレード</td><td>計算方法：<code>BillingCoreService</code>。Stripe Customer Balanceにcreditを付与 ＝<code>min(credit, 新プラン価格)</code> <b>Subscription作成の前に</b>（subscription itemの価格変更時）；新期間の開始時にStripeが自動でbalanceを差し引く。プラン変更履歴を即時記録、Stripeから新期間を更新、fee logを記録。Invoice PAIDは後でwebhookが記録。</td></tr>
+      <tr><td class="id">CHG-21</td><td>Fee logには次も保存：<code>creditAmount</code>の元の値（上限適用前）、<code>totalAmount = 0</code>。</td></tr>
+      <tr><td class="id">CHG-22</td><td>Stripeが価格変更を拒否 → schedule/historyは作成しない；invoice FAILEDを1件<code>transactionType=MANUAL</code>、差額どおりの金額、<code>failureReason</code>＝Stripeのエラー。</td></tr>
+      <tr><td class="id">CHG-23</td><td>Customer Balanceにcreditを付与した直後にStripeが価格変更を拒否 → 付与したcreditと同額をdebitで戻す。</td></tr>
+      <tr><td class="id">CHG-24, 32</td><td>Stripeを呼び出して解除：<code>cancel_at_period_end</code>、DB <code>cancelAtPeriodEnd=false</code>。</td></tr>
+      <tr><td class="id">CHG-30</td><td>Stripeの即時価格変更は呼ばない。次の時点で有効になる予約を作成：<code>currentPeriodEnd</code>、設定：<code>pendingSeatCount</code>、ジョブを起動：<code>PLAN_DOWNGRADE</code>（Stripe Scheduleに次回更新時のphaseを設定）。</td></tr>
+      <tr><td class="id">CHG-40</td><td>N日分の未払い金でpending invoice itemを作成し、新しいSubscriptionを作成（<code>quantity</code>＝選択したシート数）。旧Subscriptionは新Subscriptionの成功確認後にのみ解約。</td></tr>
+      <tr><td class="id">見積り</td><td>DB書き込みなし、Stripe呼び出しなし。Freeへの変更のプレビューは次の種別を返す：<code>PAID_TO_FREE_NORMAL</code>。</td></tr>
+      <tr><td class="id">CAN-01</td><td>Stripeを呼び出し：<code>cancel_at_period_end=true</code>、DB <code>cancelAtPeriodEnd=true</code>；Freeへの変更のschedule/historyは作成しない。</td></tr>
+      <tr><td class="id">CAN-02</td><td>SubscriptionがStripe Subscription Scheduleで管理されている場合（過去にプラン変更/価格変更あり）→ Schedule経由で解約（<code>end_behavior=cancel</code>）、進行中のphaseのみ残し将来のphaseは削除；次を直接呼ばない：<code>cancel_at_period_end</code>。</td></tr>
+      <tr><td class="id">CAN-05</td><td>Stripe Subscriptionを即時解約；記録：<code>outstandingDebtAmount</code>（N日分）、削除：<code>pastDueSince</code>、debt ledgerに1件追加。</td></tr>
+      <tr><td class="id">CAN-08</td><td>Stripeを再取得して次を確認：<code>canceled</code>→ 即時有効のFree plan schedule＋プラン変更履歴を作成。まだactive → 作成しない。すでにFree → 追加作成しない。</td></tr>
+      <tr><td class="id">CAN-10</td><td>Stripe Scheduleをreleaseし、DBの予約を削除。</td></tr>
+      <tr><td class="id">DEB</td><td>Stripe Smart Retriesが自動で再請求。7日経過時のdunningジョブ：Stripe Subscriptionを解約<b>Subscription作成の前に</b>、成功した場合のみFreeへ/<code>UNPAID</code>/未払い金を記録；各subscriptionは1日1回のみclaimされる。<span class="ui">今すぐ支払う</span> Stripeのpayを呼び出し、対象は<code>stripeInvoiceId</code>（invoice FAILEDのもの）。</td></tr>
+      <tr><td class="id">PM-01</td><td>Stripe SetupIntent（off-session）でカードを追加。初回はStripe customerを作成、以降は再利用；返却値：<code>clientSecret</code>（FE向け）。</td></tr>
+      <tr><td class="id">PM-09</td><td>Webhook <code>payment_method.detached</code>：customerにdefaultがなくなり他のカードがある → Stripeを呼び出して残りのカードをdefaultに設定。</td></tr>
+      <tr><td class="id">SEAT-10</td><td>変更：<code>quantity</code>のseat item、設定：<code>proration_behavior=always_invoice</code>、<code>payment_behavior=allow_incomplete</code>（Stripeがデフォルトのカードに自動で請求）。DBの<code>maxSeatCount</code>はwebhook <code>customer.subscription.updated</code>の受信時にのみ変更。</td></tr>
+      <tr><td class="id">SEAT-11</td><td>Seat itemはDB上の最新のStripe Priceに切り替え、itemに紐づく旧Priceは使わない。</td></tr>
+      <tr><td class="id">SEAT-12, 13</td><td>3DS：次を返す<code>clientSecret</code>（FEへ）。拒否された場合（<code>requires_payment_method</code>）：予定の日割り額でFAILEDを記録し、invoiceを開いたまま再請求待ちにしない。</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="pl-webhook">
+  <h2>Stripeからのイベント</h2>
+  <p>すべてのwebhookは署名を検証し、専用のBullMQキュー（<code>stripe-webhook-event</code>（ジョブ<code>WEBHOOK_EVENT</code>）に投入してエラー時に自動リトライ。同じ<code>event.id</code>は1回のみ処理。</p>
+  <div class="table-wrap"><table class="cases">
+    <thead><tr><th>ID</th><th>イベント</th><th>システムの処理</th><th>テナント側の表示</th></tr></thead>
+    <tbody>
+      <tr><td class="id">WH-01</td><td><code>invoice.paid</code></td><td>invoice PAIDを記録（<code>stripeInvoiceId</code>、<code>stripePaymentIntentId</code>、<code>paidAt</code>＝Stripeが請求した時点）、fee log、<code>paidMonthCount += billingCycle</code>, ACTIVE, <code>pastDueSince=null</code>。次回更新分のシート確定ジョブを事前作成。</td><td>行<span class="ui">成功</span>（<span class="ui">支払い履歴</span>；遅延/トライアルのバナーが消える</td></tr>
+      <tr><td class="id">WH-02</td><td><code>invoice.paid</code>がプラン変更後に遅れて届く</td><td>現在のプランではなく、invoice上のPriceのプランで記録。</td><td>請求書には請求時点のプラン名が入る</td></tr>
+      <tr><td class="id">WH-03</td><td><code>invoice.paid</code>（初月割引あり）</td><td><code>originalAmount</code>＝元の価格、<code>amount</code>＝請求額。</td><td><span class="ui">合計金額（概算）</span>＝元の価格、<span class="ui">支払済み</span>＝割引後</td></tr>
+      <tr><td class="id">WH-04</td><td><code>invoice.paid</code>（Customer Balanceの差し引きあり）</td><td><code>creditApplied</code>の読み取り元：<code>starting_balance</code>/<code>ending_balance</code>。</td><td><span class="ui">旧プランの未使用期間分クレジット</span></td></tr>
+      <tr><td class="id">WH-05</td><td><code>invoice.paid</code>（最低請求額未満：JPY < ¥50）</td><td>PAID, <code>amount=0</code>、<code>originalAmount</code>はinvoice明細から読み取り。</td><td>行<span class="ui">成功</span> ¥0、概算＝元の価格</td></tr>
+      <tr><td class="id">WH-06</td><td><code>invoice.paid</code>（subscription作成時の0円）</td><td>トライアルあり：スキップ。トライアルなし（100%割引）：PAID 0で記録。</td><td>トライアルあり：行なし</td></tr>
+      <tr><td class="id">WH-07</td><td>署名が不正</td><td>拒否し、何も記録しない。</td><td>—</td></tr>
+      <tr><td class="id">WH-08</td><td><code>invoice.payment_failed</code></td><td>PAST_DUE; <code>pastDueSince</code>は初回のみ設定；失敗のたびにinvoice FAILEDを1件追加、<code>transactionType=AUTO</code>、<code>failureReason</code>はStripeのエラーから取得。</td><td>遅延バナー、行<span class="ui">失敗</span> <span class="ui">自動</span></td></tr>
+      <tr><td class="id">WH-09</td><td><code>customer.subscription.updated</code></td><td>同期：<code>maxSeatCount</code>をseat itemのquantityに合わせ、statusと現在の期間も同期。</td><td>新しいシート数の表示：<span class="ui">利用上限</span></td></tr>
+      <tr><td class="id">WH-10</td><td><code>customer.subscription.deleted</code></td><td>Freeへ（plan schedule Free＋プラン変更履歴）、シート数をリセット。</td><td>アカウントはFreeプラン</td></tr>
+      <tr><td class="id">WH-11</td><td><code>refund.created</code> / <code>refund.updated</code></td><td>元のinvoiceに紐づく専用のrefundテーブルに記録：PENDING → SUCCEEDED（invoice <code>isRefunded=true</code>）またはFAILED。一致するinvoiceがない → スキップし、処理済みとしてマーク。</td><td>アプリにはまだ返金の表示ラベルがない</td></tr>
+      <tr><td class="id">WH-12</td><td><code>payment_method.detached</code></td><td>PM-09を参照。</td><td>残りのカードが次になる：<span class="ui">デフォルト</span></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="pl-dong-bo">
+  <h2>次回更新時スケジュールの同期</h2>
+  <p>更新期間の価格とシート数は、BullMQのworkerがStripe Subscription Scheduleに設定します。workerは処理時点で常に最新の価格/シート数を読み取ってからStripeを呼び出します。</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>ジョブの発生元</th><th>作成タイミング</th><th>実行タイミング</th><th>陳腐化チェック</th></tr></thead>
+    <tbody>
+      <tr><td><code>CHANGE_MEMBER</code></td><td><code>invoice.paid</code>の処理完了時</td><td><code>currentPeriodEnd − 1日</code>（直前すぎる場合は即時実行）</td><td>あり</td></tr>
+      <tr><td><code>PLAN_DOWNGRADE</code></td><td>テナントのダウングレード予約</td><td>即時</td><td>なし</td></tr>
+      <tr><td><code>PLAN_PRICE_CHANGE</code></td><td>管理者による価格変更の子ジョブ</td><td>T−2に従う</td><td>なし</td></tr>
+    </tbody>
+  </table></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>ジョブの結果</th><th>条件</th></tr></thead>
+    <tbody>
+      <tr><td><span class="b mute">NO_CHANGE</span></td><td>次回更新時の価格とメンバー数が現在と完全に同じ；Stripeは呼ばない。</td></tr>
+      <tr><td><span class="b ok">DONE</span></td><td>Schedule（未作成なら）を作成し次回更新時のphaseを更新。TRIALINGとPAST_DUEでも実行。ダウングレード予約がある場合は予約先プランの価格と次を使用：<code>pendingSeatCount</code>。</td></tr>
+      <tr><td><span class="b warn">PLAN_CHANGED</span></td><td>対象：<code>CHANGE_MEMBER</code>のみ：期間またはプランがスケジュール時と異なる、次回更新時のプラン変更予約がある、または期間末の解約待ち。Stripeは呼ばない。</td></tr>
+      <tr><td><span class="b mute">SUBSCRIPTION_CANCELED</span></td><td>Subscriptionは解約済み；静かに終了。</td></tr>
+      <tr><td><span class="b err">FAILED</span></td><td>Stripeエラー；記録：<code>errorMessage</code>、加算：<code>attemptCount</code>、エラーを投げてBullMQにリトライさせる。</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout note"><div><strong>Stripeに送るphaseパラメータ</strong>既存のScheduleを更新する場合、phase 1には次が必須：<code>start_date</code>；phase 2では次を使用：<code>end_date</code>＝phase 1の終了＋新サイクルの月数。次は使わない：<code>duration</code>（Stripe API 2026-05-27はどちらの場合も拒否）。</div></div>
+</section>
+
+<section id="pl-addon">
+  <h2>Stripe上の追加プラン</h2>
+  <ul>
+    <li><code>unitPrice</code>（価格行の）<code>ADD_ON</code>は1日あたりの価格。プランのStripe Price＝1日の価格；<code>quantity</code>（subscription itemの）＝期間の日数。</li>
+    <li>1テナントのすべての追加プランで1つのStripe Subscriptionを共用。初回期間：subscription itemは¥0のPrice＋1回限りの請求（<code>add_invoice_items</code>、日額 × 日数）、<code>proration_behavior=none</code>。</li>
+    <li>自動更新オン：subscriptionからScheduleを作成、<code>end_behavior=release</code>；phase 1は新期間開始日まで¥0のPrice、phase 2は日額のPriceで<code>quantity</code>＝期間の日数、phase開始時点で請求サイクルを固定、1か月実行。自動更新オフ：Scheduleなし、次を設定：<code>cancel_at</code>＝その日。</li>
+    <li>追加プランsubscriptionの支払い成功webhookのたびに：BullMQジョブが次回更新時の日数を計算し、更新継続中のすべてのitemの<code>quantity</code>を更新、<code>proration_behavior=none</code>、リトライあり。<code>quantity</code>は、Stripeが更新invoiceを作成する前に必ず用意される；ジョブを再実行してもデータは壊れない。</li>
+    <li>Stripe Price未作成のプラン：プランのProduct配下に日額のPriceと¥0のPriceを作成し、現行の価格スケジュール行に保存。</li>
+    <li>追加登録：1回のsubscription更新でitem追加、1回限りの請求の添付（<code>add_invoice_items</code>＝残り日数 × 日額、BEで計算）、即時請求を同時に実行；<code>payment_behavior=error_if_incomplete</code>。カード拒否時はStripeが更新全体を取り消し、itemやinvoice itemは残らない。Scheduleの修正が必要な場合はこの更新が成功した後に行う。初回期間でScheduleあり：両方のphaseに追加；初回期間で自動更新オフ：¥0 Priceのitemのみ追加；新期間開始日以降：日額Priceのitemを追加。</li>
+    <li>自動更新オフ：初回期間でScheduleあり → releaseしてから次を設定：<code>cancel_at</code>；新期間開始日以降でScheduleが紐づいている → Schedule経由で解約；Scheduleがrelease済み →<code>cancel_at</code>＝期間終了。再度オン：次を解除<code>cancel_at</code>、初回期間ならScheduleを2 phaseで再作成；Scheduleが解約待ち → 次を再設定：<code>end_behavior=release</code>。</li>
+    <li>1プランの更新解除：そのプランの日額Priceを次回更新時phaseから即時に削除（ジョブ経由ではない）、item →<code>PENDING_CANCEL</code>。最後のプラン：Scheduleをreleaseしてから次を設定：<code>cancel_at</code>、または次を設定：<code>cancel_at</code>（直接、基準：<code>current_period_end</code>、Scheduleがない場合はStripeからリアルタイムに取得）。</li>
+    <li>プランの再登録<code>PENDING_CANCEL</code>：subscription item idを維持し、日額Priceを次回更新時phaseに再追加。最後のプラン：初回期間なら次を解除<code>cancel_at</code>してからScheduleを2 phaseで再作成；新期間開始日以降はScheduleを再設定<code>end_behavior=release</code>。</li>
+    <li>価格変更：更新phaseの日額Priceのみ差し替え、現在のitemは変えない；Scheduleがrelease済みなら次回更新からitemのPriceを変更、日割りなし。</li>
+  </ul>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Stripe invoiceの種類</th><th>意味</th><th>影響</th></tr></thead>
+    <tbody>
+      <tr><td><code>subscription_create</code></td><td>初回期間の請求</td><td>PAIDで記録、変更なし：<code>currentPeriodEnd</code></td></tr>
+      <tr><td>追加登録の更新によるInvoice</td><td>追加プラン登録時の請求</td><td>PAIDで記録、変更なし：<code>currentPeriodEnd</code></td></tr>
+      <tr><td><code>subscription_update</code></td><td>phase切り替え時の最初の更新請求</td><td>PAIDで記録、更新：<code>currentPeriodEnd</code>。エラー：FAILED、PAST_DUE、再請求を予定。</td></tr>
+      <tr><td><code>subscription_cycle</code></td><td>毎月の更新</td><td>PAIDで記録、更新：<code>currentPeriodEnd</code></td></tr>
+    </tbody>
+  </table></div>
+  <p>phase切り替え：ACTIVEのitemは新しいsubscription item idに更新；item <code>PENDING_CANCEL</code>がsubscription上にもうない →<code>CANCELED</code>。期間終了時にStripeがsubscriptionを解約 → subscriptionとすべてのitemが<code>CANCELED</code>。<code>invoice.paid</code>（追加プランの）はその追加プランのコードでinvoiceを1件記録するのみで、メインプランのfee logは記録しない。</p>
+</section>
+
+<section id="pl-admin">
+  <h2>管理者による価格変更・プラン終了</h2>
+  <ul>
+    <li>1プラン＝1 Stripe Product；すべてのStripe Price（サイクルごと、価格変更ごと）は同じProductに紐づく。Productはプラン名で1回だけ作成；Priceがすでにある価格行は再利用。</li>
+    <li>適用日Tのプラン価格変更：T−2に親ジョブが新しい価格行のStripe Priceを登録（未作成なら）し、次回更新時にそのプランを使う各テナントごとに子ジョブを1つ作成。子ジョブはScheduleを作成/更新：旧価格は次まで維持<code>currentPeriodEnd</code>、その後は新価格（ただしTより前にはならない）；移行予約で入ってくるテナントは将来のphaseのみ修正。</li>
+    <li>プラン終了：3サイクルすべてにINACTIVEのスケジュールを作成；メールジョブはT−14まで、subscription更新ジョブはT−2まで遅延；価格変更パイプラインは実行しない。利用中のテナント：期間末の解約を設定、Scheduleがあれば経由（進行中のphaseは維持、新価格のphaseは削除）。</li>
+  </ul>
+  <div class="table-wrap"><table class="cases">
+    <thead><tr><th>ID</th><th>状況</th><th>結果</th></tr></thead>
+    <tbody>
+      <tr><td class="id">ADM-10</td><td>T−2でStripe Priceの登録に失敗</td><td>子ジョブは作成せず、親ジョブはFAILED、BullMQがリトライ。</td></tr>
+      <tr><td class="id">ADM-11</td><td>旧T−2ジョブの実行前に管理者が日付Tを変更</td><td>旧ジョブが設定変更を検知し、子ジョブを作成しない；プラン終了/メールジョブは「スケジュール変更済み」とマーク。</td></tr>
+      <tr><td class="id">ADM-12</td><td>T−2ジョブの再実行</td><td>同じテナントに子ジョブを重複作成しない。</td></tr>
+      <tr><td class="id">ADM-13</td><td>T以降にテナントがシート追加</td><td>DB上の最新価格を適用、子ジョブの処理完了有無には依存しない。</td></tr>
+      <tr><td class="id">ADM-14</td><td>新価格のSchedule作成後にテナントがプラン変更/解約</td><td>プラン変更：新しい選択に合わせてScheduleを再構築。解約：Schedule経由、現在価格のphaseは維持、次は設定しない：<code>cancel_at_period_end</code>。</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="pl-mail">
+  <h2>メール送信</h2>
+  <ul>
+    <li>プラン価格変更メールのfan-outジョブ（<code>PlanPriceChangeMailNoticeFanOutProcessorService</code>）はT−14に実行：プラン利用中の各テナントのownerに送信、ジョブは次へ遷移：<code>DONE</code>。ジョブ実行前に管理者がさらに新しい価格に変更していた場合 → 送信せず、ジョブは次へ遷移：<code>PLAN_CHANGED</code>。プラン終了/追加プランのメールジョブも同様に「スケジュール変更済み」ステータスを使用。</li>
+    <li>各メールは次を持つ1つのジョブ：<code>dedupKey</code>、worker <code>MailProcessorService.handleMailJob</code>、記録テーブル：<code>MailJob</code>：<ul>
+        <li><code>dedupKey</code>未送信 → レンダリング、送信、行を記録：<code>SENT</code>（message "ok"）。</li>
+        <li>送信エラー → 行を記録：<code>FAILED</code>（エラー内容付き）、エラーを外に投げてBullMQにリトライさせる。</li>
+        <li>すでに次の行がある：<code>SENT</code>→ スキップ、再送しない、新しい行も作らない。</li>
+        <li>次の行のみある：<code>FAILED</code>→ 再処理し、新しい行を作成。</li>
+      </ul>
+    </li>
+    <li>Stripeのメール（STR-01…07）は次を経由しない：<code>MailJob</code>。受信者はStripe customerの<code>email</code>で、1回だけ設定される場所：<code>StripeService.createCustomer</code>（payloadには次のみ：<code>email</code>、<code>name</code>、<code>test_clock</code>；次はない：<code>preferred_locales</code>）。<code>customers.update</code>は現在、次の変更にのみ使用：<code>invoice_settings.default_payment_method</code>、emailは更新しない。</li>
+    <li>メールテンプレートはプレースホルダーを使用（<code>{{field}}</code>（<code>renderMailTemplate</code>）：dataにあれば値で置換（出現箇所すべて）、dataになければ文字をそのまま残す：<code>{{field}}</code>。</li>
+  </ul>
+</section>
+
+<section id="pl-luu-vet">
+  <h2>ログとStripeエラー</h2>
+  <ul>
+    <li><b>Fee log</b>：課金のたびに保存：<code>seatCount</code>、<code>unitPrice</code>、<code>discountSource</code>、<code>daysUsed</code>、<code>paidAmount</code>、<code>usedAmount</code>、<code>creditAmount</code>（元の値、上限適用前）、<code>totalAmount</code>、<code>stripeInvoiceId</code>— 手計算で再計算するのに十分。</li>
+    <li><b>Debt ledger</b>（未払い金の履歴）：参照用のみで、業務フローは変えない。発生した未払い金（dunning、PAST_DUE中の自主解約）ごとに1行記録；支払い時に次を紐づけ：<code>invoiceId</code>。</li>
+    <li><b>StripeApiCallLog</b>：Stripe API呼び出しをすべて追記のみで記録（SUCCESS/FAILED、request、生のresponse、<code>errorMessage</code>）；エラーはそのまま外に投げる。</li>
+  </ul>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Stripeエラー</th><th class="num">HTTP</th><th>返却コード</th></tr></thead>
+    <tbody>
+      <tr><td><code>StripeCardError</code>（カード拒否）</td><td class="num">402</td><td><code>PAYMENT_DECLINED</code>、Stripeの実際のmessage付き</td></tr>
+      <tr><td><code>StripeInvalidRequestError</code> <code>resource_missing</code>（customerにデフォルトのカードがない）</td><td class="num">402</td><td><code>PAYMENT_METHOD_REQUIRED</code></td></tr>
+      <tr><td><code>StripeAPIError</code>（Stripeのインフラエラー）</td><td class="num">503</td><td><code>STRIPE_UNAVAILABLE</code></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="pl-tinh-toan">
+  <h2>換算と入力データ</h2>
+  <h3>3サイクルの価格</h3>
+  <p>管理画面では3サイクルの絶対価格を入力し、FEがサイクルごとの割引率に換算してBEへ送信（<code>quarterlyDiscountPercent</code>/<code>yearlyDiscountPercent</code>）。BEは3行を保存<code>PlanPricingSchedule</code>（計算式）：</p>
+  <div class="formula">月額 ＝ 元の月額
+四半期 ＝ 元の月額 × 3  × (1 − 四半期割引率)
+年額   ＝ 元の月額 × 12 × (1 − 年割引率)</div>
+  <p>例：1,000/月、四半期割引10%、年割引20% → 1,000 / 2,700 / 9,600。</p>
+  <h3>日次でリセットされる上限（LIM-04）</h3>
+  <p><code>TenantResourceLimit</code>が本日中に更新済み → 値をそのまま返し、再計算しない。昨日以前のレコード → 現在のプランで再計算。追加プランを登録した場合は即時再計算。</p>
+  <h3>不正な入力データ</h3>
+  <p><code>BillingCoreService</code>がエラーを投げる条件：価格段階リストが空；<code>billingCycle</code> ≤ 0 またはどの段階にも一致しない；価格または支払済み額がマイナス；期間開始日が未来；利用日数が期間の総日数を超える；<code>level</code>が数値でない；新プラン価格またはcreditがマイナス。</p>
+</section>
+
+      <div class="no-result" id="no-result">キーワードに一致するケースがありません。エラーコード（例：<code>PAST_DUE</code>）や別のキーワードでお試しください。</div>
+      <footer class="footer">Billing Case Guide · AI Platform · 2026/10/05 更新</footer>
+    </div>
+  </main>
+
+  <aside class="toc" aria-label="このページの内容">
+    <div class="toc-title">このページの内容</div>
+    <div id="toc-list"></div>
+  </aside>
+</div>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  var themeBtn = document.getElementById('theme-btn');
+  var THEME_KEY = 'billing-guide-theme';
+  var THEME_LABEL = { light: 'ライト', dark: 'ダーク', system: 'システム' };
+  var THEME_ORDER = ['system', 'light', 'dark'];
+
+  function readStoredTheme() {
+    try { return localStorage.getItem(THEME_KEY); } catch (e) { return null; }
+  }
+  function applyTheme(theme_name) {
+    if (theme_name === 'system') root.removeAttribute('data-theme');
+    else root.setAttribute('data-theme', theme_name);
+    themeBtn.textContent = '表示: ' + THEME_LABEL[theme_name];
+  }
+  /* Chỉ ghi đè theme khi người xem đã tự chọn trên trang; mặc định giữ theme do môi trường hiển thị đặt sẵn. */
+  var stored_theme = readStoredTheme();
+  var current_theme = stored_theme || root.getAttribute('data-theme') || 'system';
+  if (stored_theme) applyTheme(stored_theme);
+  else themeBtn.textContent = '表示: ' + THEME_LABEL[current_theme];
+  themeBtn.addEventListener('click', function () {
+    current_theme = THEME_ORDER[(THEME_ORDER.indexOf(current_theme) + 1) % THEME_ORDER.length];
+    applyTheme(current_theme);
+    try { localStorage.setItem(THEME_KEY, current_theme); } catch (e) {}
+  });
+
+  document.getElementById('menu-btn').addEventListener('click', function () {
+    document.body.classList.toggle('nav-open');
+  });
+  document.querySelectorAll('.side-link').forEach(function (link) {
+    link.addEventListener('click', function () { document.body.classList.remove('nav-open'); });
+  });
+
+  var sections = Array.prototype.slice.call(document.querySelectorAll('#content section'));
+  buildToc();
+  watchActiveSection();
+  setupSearch();
+
+  function buildToc() {
+    var toc_list = document.getElementById('toc-list');
+    sections.forEach(function (section) {
+      var heading = section.querySelector('h1, h2');
+      if (!heading) return;
+      appendTocLink(toc_list, section.id, heading.textContent, 'lv2');
+      section.querySelectorAll('h3').forEach(function (sub_heading, sub_index) {
+        if (!sub_heading.id) sub_heading.id = section.id + '-' + (sub_index + 1);
+        appendTocLink(toc_list, sub_heading.id, sub_heading.textContent, 'lv3');
+      });
+    });
+  }
+  function appendTocLink(container, target_id, label_text, level_class) {
+    var link = document.createElement('a');
+    link.href = '#' + target_id;
+    link.textContent = label_text;
+    link.className = level_class;
+    link.dataset.section = target_id;
+    container.appendChild(link);
+  }
+
+  /* Sau khi bấm link, giữ nguyên mục vừa bấm cho tới khi người xem tự cuộn — các mục cuối trang ngắn không cuộn lên tới đầu được, tính theo vị trí sẽ tô nhầm mục trước. */
+  var is_link_navigating = false;
+
+  function watchActiveSection() {
+    var is_frame_pending = false;
+    window.addEventListener('scroll', function () {
+      if (is_link_navigating || is_frame_pending) return;
+      is_frame_pending = true;
+      requestAnimationFrame(function () { is_frame_pending = false; markActive(findCurrentSectionId()); });
+    }, { passive: true });
+    ['wheel', 'touchstart', 'keydown'].forEach(function (event_name) {
+      window.addEventListener(event_name, function () { is_link_navigating = false; }, { passive: true });
+    });
+    document.querySelectorAll('.side-link, .toc a').forEach(function (link) {
+      link.addEventListener('click', function () {
+        is_link_navigating = true;
+        markActive(findSectionIdOfTarget(link.getAttribute('href').slice(1)));
+      });
+    });
+    markActive(findCurrentSectionId());
+  }
+  function findCurrentSectionId() {
+    var reading_line = document.querySelector('.navbar').offsetHeight + 24;
+    var current_id = sections[0].id;
+    sections.forEach(function (section) {
+      var is_above_line = section.getBoundingClientRect().top <= reading_line;
+      if (!section.classList.contains('dim') && is_above_line) current_id = section.id;
+    });
+    return current_id;
+  }
+  function findSectionIdOfTarget(target_id) {
+    var target_element = document.getElementById(target_id);
+    var parent_section = target_element && target_element.closest('section');
+    return parent_section ? parent_section.id : target_id;
+  }
+  function markActive(section_id) {
+    document.querySelectorAll('.side-link, .toc a').forEach(function (link) {
+      link.classList.toggle('active', link.getAttribute('href') === '#' + section_id);
+    });
+    keepLinkVisibleInSidebar(document.querySelector('.side-link.active'));
+  }
+  function keepLinkVisibleInSidebar(active_link) {
+    if (!active_link) return;
+    var sidebar = document.getElementById('sidebar');
+    var link_top = active_link.offsetTop;
+    var link_bottom = link_top + active_link.offsetHeight;
+    if (link_top < sidebar.scrollTop) sidebar.scrollTop = link_top - 8;
+    else if (link_bottom > sidebar.scrollTop + sidebar.clientHeight) sidebar.scrollTop = link_bottom - sidebar.clientHeight + 8;
+  }
+
+  function setupSearch() {
+    var search_input = document.getElementById('search-input');
+    var no_result = document.getElementById('no-result');
+    document.addEventListener('keydown', function (event) {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        search_input.focus();
+      }
+    });
+    search_input.addEventListener('input', function () {
+      var keyword = normalizeText(search_input.value.trim());
+      var visible_count = 0;
+      sections.forEach(function (section) {
+        var is_match = filterSection(section, keyword);
+        section.classList.toggle('dim', !is_match);
+        if (is_match) visible_count++;
+      });
+      no_result.style.display = visible_count === 0 ? 'block' : 'none';
+    });
+  }
+  function filterSection(section, keyword) {
+    var rows = section.querySelectorAll('tbody tr');
+    rows.forEach(function (row) { row.classList.remove('hit'); });
+    if (!keyword) return true;
+    var has_row_hit = false;
+    rows.forEach(function (row) {
+      if (normalizeText(row.textContent).indexOf(keyword) !== -1) { row.classList.add('hit'); has_row_hit = true; }
+    });
+    return has_row_hit || normalizeText(section.textContent).indexOf(keyword) !== -1;
+  }
+  function normalizeText(raw_text) {
+    return raw_text.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd');
+  }
+})();
+</script>
+
+</body></html>

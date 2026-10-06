@@ -209,6 +209,7 @@ section.dim { display: none; }
       <div class="side-title">シートと上限</div>
       <a class="side-link" href="#ghe">シート</a>
       <a class="side-link" href="#gioi-han">利用上限</a>
+      <a class="side-link" href="#vuot-han-muc">上限超過時のロック</a>
     </div>
     <div class="side-group">
       <div class="side-title">拡張</div>
@@ -249,6 +250,7 @@ section.dim { display: none; }
     <a class="entry" href="#cong-thuc"><b>料金を手計算で確認する</b><span>段階計算、クレジット、遅延中の未払い金、追加プランの日額</span></a>
     <a class="entry" href="#that-bai-no"><b>カードが拒否されたら？</b><span>支払い遅延、7日間の猶予、Freeへの移行、未払い金</span></a>
     <a class="entry" href="#ghe"><b>シートのルール</b><span>招待のブロック、期間途中のシート追加、次回更新時のシート数</span></a>
+    <a class="entry" href="#vuot-han-muc"><b>編集できなくなったのはなぜ？</b><span>ダウングレードやFree移行後の、シート・プロジェクト数・容量の超過</span></a>
     <a class="entry" href="#addon"><b>追加プラン</b><span>日額料金、各期間の日数分を請求</span></a>
     <a class="entry" href="#ma-loi"><b>見慣れないエラーコード</b><span>意味、テナントに表示されるメッセージ、関連ケース</span></a>
   </div>
@@ -257,7 +259,7 @@ section.dim { display: none; }
   <ul>
     <li>太字の「」付きの文字（例：<span class="ui">現在のプラン</span>）は<b>画面上のラベルそのまま</b>です。<span class="ui">支払い履歴</span> › <span class="ui">現在の未払い金</span>の形式はタブ › 項目を表します。</li>
     <li>列<b>ID</b>はやり取りで使うケース番号です（例：<code>CHG-21</code>）。コード上のIDではありません。</li>
-    <li><span class="b ok">OK</span>は成功、<span class="b err">エラーコード</span>はそのエラーコードでブロック、<span class="b warn">変更なし</span>は操作が失敗し、すべて元のままであることを示します。</li>
+    <li><span class="b ok">OK</span>は成功、<span class="b err">エラーコード</span>はそのエラーコードでブロック、<span class="b warn">変更なし</span>は操作が失敗し、すべて元のまま、<span class="b info">閲覧のみ</span>は該当部分がロックされ閲覧しかできない状態を示します。</li>
     <li>Stripe連携、ログ、バックグラウンドジョブの詳細はページ末尾の<a href="#phu-luc">技術付録</a>にあります。</li>
   </ul>
 </section>
@@ -280,6 +282,7 @@ section.dim { display: none; }
       <tr><td>未使用分クレジット</td><td>現在の期間の未使用分。アップグレード時に新プランの料金から差し引かれます。詳しくは<a href="#cong-thuc">計算式</a>。</td><td><span class="ui">今期支払済み（クレジット）</span>；請求書明細：<span class="ui">旧プランの未使用期間分クレジット</span></td></tr>
       <tr><td>使用済み</td><td>現在の期間で消化した金額。クレジット額を出すための計算過程にすぎません。</td><td>非表示</td></tr>
       <tr><td>プラン変更予約</td><td>次回更新から適用待ちのプラン（ダウングレード後）。予約時に選んだシート数も保持します。</td><td>バナー<span class="ui">次のプラン — {プラン}</span>、ボタン<span class="ui">予約中のプランを取り消す</span></td></tr>
+      <tr><td>上限超過ロック</td><td>上限を超えて利用している間（有効メンバー数がシート数を超える、プロジェクト数が<span class="ui">プロジェクト</span>の上限を超える、使用容量が<span class="ui">ストレージ</span>の上限を超える）、該当する編集操作がロックされます。テナントが上限内に戻せば自動で解除されます。</td><td><a href="#vuot-han-muc">上限超過時のロック</a>を参照</td></tr>
       <tr><td>支払い履歴</td><td>請求ごとの記録。<span class="ui">ステータス</span>：<span class="ui">成功</span> / <span class="ui">失敗</span>。<span class="ui">種別</span>：<span class="ui">自動</span>（更新） / <span class="ui">手動</span>（テナント操作）。</td><td>タブ：<span class="ui">支払い履歴</span></td></tr>
     </tbody>
   </table></div>
@@ -538,7 +541,7 @@ section.dim { display: none; }
   <div class="table-wrap"><table class="cases">
     <thead><tr><th>ID</th><th>状況</th><th>結果</th><th>エラーコード</th></tr></thead>
     <tbody>
-      <tr><td class="id">CHG-30</td><td>より安いプランにダウングレード</td><td>請求なし。新プランはまだ適用されず、タブ<span class="ui">現在のプラン</span>にバナー<span class="ui">次のプラン — {プラン}。{日付}から有効です。今期の終了までは現在のプランをご利用いただけます。</span>次回更新時は予約時に選んだシート数で計算。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">CHG-30</td><td>より安いプランにダウングレード</td><td>請求なし。新プランはまだ適用されず、タブ<span class="ui">現在のプラン</span>にバナー<span class="ui">次のプラン — {プラン}。{日付}から有効です。今期の終了までは現在のプランをご利用いただけます。</span>次回更新時は予約時に選んだシート数で計算。適用日の時点で、有効メンバー数がこのシート数を超えている場合、またはプロジェクト数・使用容量が新プランの上限を超えている場合は、<a href="#vuot-han-muc">上限超過時のロック</a>が適用されます。</td><td><span class="b ok">OK</span></td></tr>
       <tr><td class="id">CHG-31</td><td>同じプランの別サイクルに変更</td><td>ダウングレードと同様、予約には新しいサイクルが設定されます。</td><td><span class="b ok">OK</span></td></tr>
       <tr><td class="id">CHG-32</td><td>解約申請後にダウングレード</td><td>解約申請は自動で取り下げられ、新プランの予約は通常どおり作成されます。</td><td><span class="b ok">OK</span></td></tr>
     </tbody>
@@ -596,8 +599,8 @@ section.dim { display: none; }
 
   <h3>Freeに戻ったときのシート数</h3>
   <p>次の3つのケースに適用：支払い遅延中に自ら解約、7日間の猶予期間切れでFreeへ移行、解約申請後の期間終了。</p>
-  <div class="formula">シート数 = max（Freeプランのメンバー上限、有効メンバー数）</div>
-  <p>例：現在20シート、Freeプランの上限5人、有効メンバー8人 → 8シート（既存メンバーは削らない）。</p>
+  <div class="formula">シート数 = Freeプランのメンバー上限</div>
+  <p>例：現在20シート、Freeプランの上限5人、有効メンバー8人 → 5シート。システムはメンバーを自動で停止も削除もしません。8人が5シートを超えているため、5人まで減らすまで法人はロックされます（<a href="#vuot-han-muc">上限超過時のロック</a>、LCK-01）。プロジェクト数と使用容量がFreeプランの上限を超えている場合も同様にロックされます。</p>
 </section>
 
 <section id="cong-thuc">
@@ -755,7 +758,7 @@ section.dim { display: none; }
   <h3>次回更新時のシート数</h3>
   <ul>
     <li>更新期間のシート数 ＝ ステータス<span class="ui">有効</span>のメンバー数（<span class="ui">支払日</span>の前日時点）。</li>
-    <li>プラン変更予約がある場合、次回更新時は予約時に選んだシート数を使い、メンバー数は数え直さない。</li>
+    <li>プラン変更予約がある場合、次回更新時は予約時に選んだシート数を使い、メンバー数は数え直さない。その時点で有効メンバー数がこのシート数を超えていればロックされる（LCK-02）。</li>
     <li>解約申請済みの場合、更新期間がないためシート数は確定しない。</li>
   </ul>
 </section>
@@ -773,11 +776,59 @@ section.dim { display: none; }
       <tr><td class="id">LIM-02</td><td>ストレージ容量を使い切った</td><td>ファイル追加をブロック。</td><td><span class="b err">STORAGE_LIMIT_REACHED</span></td></tr>
       <tr><td class="id">LIM-03</td><td>上限<span class="ui">無制限</span></td><td>常に許可。</td><td><span class="b ok">OK</span></td></tr>
       <tr><td class="id">LIM-05</td><td>追加プランの登録（初回または追加）</td><td>上限が増える<b>即時</b>。</td><td><span class="b ok">OK</span></td></tr>
-      <tr><td class="id">LIM-06</td><td>追加プランの自動更新を解除</td><td>プランが失効するまで上限はそのまま。完全に終了したプランは加算されなくなります。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">LIM-06</td><td>追加プランの自動更新を解除</td><td>プランが失効するまで上限はそのまま。完全に終了したプランは加算されなくなります。その時点でプロジェクト数または使用容量が残りの上限を超えていればロックされます（LCK-10、LCK-20）。</td><td><span class="b ok">OK</span></td></tr>
       <tr><td class="id">LIM-07</td><td>Freeプランの個人テナントでメンバー上限が5</td><td>シートは1のまま。</td><td><span class="b ok">OK</span></td></tr>
     </tbody>
   </table></div>
-  <p class="meta">LIM-04（上限が日次でリセットされる仕組み）は<a href="#pl-tinh-toan">付録</a>。</p>
+  <p class="meta">LIM-04（上限が日次でリセットされる仕組み）は<a href="#pl-tinh-toan">付録</a>。ダウングレードやFree移行の後、上限を超えて利用している場合は<a href="#vuot-han-muc">上限超過時のロック</a>を参照。</p>
+</section>
+
+<section id="vuot-han-muc">
+  <h2>上限超過時のロック</h2>
+  <p>ダウングレード、Freeへの移行、追加プランの失効の後、テナントが新しい上限を超えて利用している状態になることがあります。システムはメンバーを自動で停止したり、プロジェクトやファイルを削除したりはしません。代わりに該当する編集操作をロックし、テナント自身が上限内に戻した時点で自動的に元へ戻します。下記3種類のロックは互いに独立しており、同時に発生することもあります。</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>種類</th><th>ロックされる条件</th><th>ロックされる操作</th><th>引き続きできる操作</th><th>解除される条件</th></tr></thead>
+    <tbody>
+      <tr><td><b>シート超過</b></td><td><span class="ui">有効</span>のメンバー数がシート数を超えている</td><td>法人内の全員について、追加・更新・編集・削除のすべて。閲覧のみ可能になります</td><td>法人オーナーと法人管理者：メンバー管理機能での追加・更新・編集・削除</td><td><span class="ui">有効</span>のメンバー数がシート数以下になる</td></tr>
+      <tr><td><b>プロジェクト数超過</b></td><td>プロジェクト数（未削除）が<span class="ui">プロジェクト</span>の上限を超えている</td><td>すべてのプロジェクトと、プロジェクト内の全機能の更新・編集</td><td>閲覧。プロジェクトリーダーによるプロジェクトの削除</td><td>プロジェクト数が上限以下になる</td></tr>
+      <tr><td><b>ストレージ超過</b></td><td>使用容量が<span class="ui">ストレージ</span>の上限を超えている</td><td>全機能でのファイルアップロード</td><td>ファイル削除を含め、それ以外のすべての操作</td><td>使用容量が上限以下になる</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>シート超過</h3>
+  <div class="table-wrap"><table class="cases">
+    <thead><tr><th>ID</th><th>状況</th><th>結果</th><th>エラーコード</th></tr></thead>
+    <tbody>
+      <tr><td class="id">LCK-01</td><td>Freeへ移行（解約申請後の期間終了、支払い遅延中の自主解約、7日間の猶予期間切れ）した時点で、有効メンバー数がFreeプランの<span class="ui">メンバー上限</span>を超えている</td><td>シート数はFreeプランの上限に設定され（<a href="#huy-goi">Freeに戻ったときのシート数</a>）、メンバーは誰も停止されません。法人はシート超過でロックされます。例：Freeが5人、有効メンバーが8人 → 5シート、ロック。</td><td><span class="b info">閲覧のみ</span></td></tr>
+      <tr><td class="id">LCK-02</td><td>ダウングレードの適用日に、有効メンバー数が予約時に選んだシート数を超えている（予約後に追加で招待した場合など）</td><td>新プランは予約時のシート数どおりに適用されます。法人はシート超過でロックされます。</td><td><span class="b info">閲覧のみ</span></td></tr>
+      <tr><td class="id">LCK-03</td><td>ロック中に一般メンバーが操作</td><td>すべての機能が閲覧のみになり、追加・更新・編集・削除はできません。</td><td><span class="b info">閲覧のみ</span></td></tr>
+      <tr><td class="id">LCK-04</td><td>ロック中に法人オーナーまたは法人管理者が操作</td><td>一般メンバーと同じく閲覧のみですが、メンバー管理機能だけは例外で、メンバーの更新・編集・停止・削除ができます。プラン管理（プラン変更、シート追加、支払い、支払いカード）も閲覧のみになります。</td><td><span class="b info">閲覧のみ</span></td></tr>
+      <tr><td class="id">LCK-05</td><td>ロック中に新しいメンバーを招待</td><td>シートの空きがないためブロック（FreeプランはSEAT-01、有料プランはSEAT-02）。</td><td><span class="b err">SEAT_LIMIT_REACHED_FREE_PLAN</span><br><span class="b err">SEAT_LIMIT_REACHED_PAID_PLAN</span></td></tr>
+      <tr><td class="id">LCK-06</td><td>法人オーナーまたは法人管理者が、有効メンバー数がシート数以下になるまでメンバーを停止・削除</td><td>法人内の全員について、ロック前の権限がただちに戻ります。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">LCK-07</td><td>個人プラン</td><td>発生しません。個人プランは常に1シート、1メンバーです。</td><td><span class="b ok">OK</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>プロジェクト数超過</h3>
+  <div class="table-wrap"><table class="cases">
+    <thead><tr><th>ID</th><th>状況</th><th>結果</th><th>エラーコード</th></tr></thead>
+    <tbody>
+      <tr><td class="id">LCK-10</td><td>プロジェクト数（未削除）が<span class="ui">プロジェクト</span>の上限を超えている（ダウングレード、Freeへの移行、<span class="ui">プロジェクト</span>の追加プラン失効の後）</td><td>すべてのプロジェクトとプロジェクト内の全機能が閲覧のみになり、更新・編集はできません。</td><td><span class="b info">閲覧のみ</span></td></tr>
+      <tr><td class="id">LCK-11</td><td>ロック中にプロジェクトリーダーがプロジェクトを削除</td><td>削除できます。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">LCK-12</td><td>ロック中に新規プロジェクトを作成</td><td>ブロック（LIM-01）。</td><td><span class="b err">PROJECT_LIMIT_REACHED</span></td></tr>
+      <tr><td class="id">LCK-13</td><td>プロジェクト数が上限以下になるまで削除</td><td>すべてのプロジェクトが通常どおり使えるようになります。プロジェクト数が上限ちょうどの場合はロックされず、新規作成のみブロックされます（LIM-01）。</td><td><span class="b ok">OK</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>ストレージ超過</h3>
+  <div class="table-wrap"><table class="cases">
+    <thead><tr><th>ID</th><th>状況</th><th>結果</th><th>エラーコード</th></tr></thead>
+    <tbody>
+      <tr><td class="id">LCK-20</td><td>使用容量が<span class="ui">ストレージ</span>の上限を超えている（ダウングレード、Freeへの移行、<span class="ui">ストレージ</span>の追加プラン失効の後）</td><td>全機能でファイルのアップロードがブロックされます。それ以外の操作は通常どおりです。</td><td><span class="b err">STORAGE_LIMIT_REACHED</span></td></tr>
+      <tr><td class="id">LCK-21</td><td>ロック中にファイルを削除</td><td>削除でき、使用容量もその分減ります。</td><td><span class="b ok">OK</span></td></tr>
+      <tr><td class="id">LCK-22</td><td>使用容量が上限以下になるまで削除</td><td>全機能でアップロードが再開されます。アップロードのたびに空き容量の判定は行われます（LIM-02）。</td><td><span class="b ok">OK</span></td></tr>
+    </tbody>
+  </table></div>
 </section>
 
 <section id="admin">
@@ -927,16 +978,16 @@ section.dim { display: none; }
       <tr><td><code>INVOICE_NOT_FOUND</code></td><td>再決済する失敗請求書が見つからない</td><td>再決済が必要な請求書が見つかりません。サポートにお問い合わせください。</td><td>DEB-07</td></tr>
       <tr><td><code>PAYMENT_METHOD_NOT_FOUND</code></td><td>アカウントに属さないカード</td><td class="muted">—</td><td>PM-06</td></tr>
       <tr><td><code>DEFAULT_PAYMENT_METHOD_DELETE_BLOCKED</code></td><td>現時点ではデフォルトのカードを削除できない</td><td>有料プラン利用中、未払い金あり、または猶予期間中はデフォルトのカードを削除できません…</td><td>PM-08</td></tr>
-      <tr><td><code>SEAT_LIMIT_REACHED_FREE_PLAN</code></td><td>Freeプランのシート上限</td><td>Freeプランのメンバー上限に達しました。プランをアップグレードしてください…</td><td>SEAT-01</td></tr>
-      <tr><td><code>SEAT_LIMIT_REACHED_PAID_PLAN</code></td><td>有料プランのシート上限</td><td>現在のメンバー上限に達しました。シートを追加購入してください…</td><td>SEAT-02</td></tr>
+      <tr><td><code>SEAT_LIMIT_REACHED_FREE_PLAN</code></td><td>Freeプランのシート上限</td><td>Freeプランのメンバー上限に達しました。プランをアップグレードしてください…</td><td>SEAT-01、LCK-05</td></tr>
+      <tr><td><code>SEAT_LIMIT_REACHED_PAID_PLAN</code></td><td>有料プランのシート上限</td><td>現在のメンバー上限に達しました。シートを追加購入してください…</td><td>SEAT-02、LCK-05</td></tr>
       <tr><td><code>SEAT_INCREASE_PAYMENT_FAILED</code></td><td>シート追加時にカード拒否</td><td>シート追加の差額を請求できませんでした…</td><td>SEAT-13</td></tr>
       <tr><td><code>PAYMENT_METHOD_REQUIRED_FOR_SEAT_INCREASE</code></td><td>カード未登録でシート追加</td><td>シートを追加購入する前に支払い方法を追加してください。</td><td>SEAT-14</td></tr>
       <tr><td><code>SUBSCRIPTION_PAST_DUE_ACTION_BLOCKED</code></td><td>支払い遅延中は操作をロック</td><td class="muted">—</td><td>SEAT-16</td></tr>
       <tr><td><code>SEAT_INCREASE_BLOCKED_DURING_TRIAL</code></td><td>トライアル中はシート追加不可</td><td>トライアル中はメンバー数を増やせません…</td><td>SEAT-17</td></tr>
       <tr><td><code>SEAT_INCREASE_BLOCKED_FOR_PERSONAL_TENANT</code></td><td>個人プランはシート追加不可</td><td class="muted">—</td><td>SEAT-18</td></tr>
       <tr><td><code>VALIDATION_ERROR</code></td><td>入力データが不正</td><td>送信されたデータが不正です。もう一度ご確認ください。</td><td>SEAT-19</td></tr>
-      <tr><td><code>PROJECT_LIMIT_REACHED</code></td><td>プロジェクト上限に到達</td><td class="muted">—</td><td>LIM-01</td></tr>
-      <tr><td><code>STORAGE_LIMIT_REACHED</code></td><td>ストレージ容量不足</td><td class="muted">—</td><td>LIM-02</td></tr>
+      <tr><td><code>PROJECT_LIMIT_REACHED</code></td><td>プロジェクト上限に到達</td><td class="muted">—</td><td>LIM-01、LCK-12</td></tr>
+      <tr><td><code>STORAGE_LIMIT_REACHED</code></td><td>ストレージ容量不足</td><td class="muted">—</td><td>LIM-02、LCK-20</td></tr>
       <tr><td><code>END_DATE_AND_AUTO_RENEW_REQUIRED_FOR_FIRST_ADDON</code></td><td>初回の追加プラン登録で日付または自動更新の選択が未指定</td><td class="muted">—（アプリにはコード<code>END_DATE_REQUIRED_FOR_FIRST_ADDON</code>）</td><td>ADD-03</td></tr>
       <tr><td><code>END_DATE_REQUIRED_FOR_FIRST_ADDON</code></td><td>初回の追加プランの金額を日付未選択でプレビュー</td><td>最初の追加プランの締め日を選択してください。</td><td>ADD-15</td></tr>
       <tr><td><code>END_DATE_MUST_BE_IN_FUTURE_FOR_FIRST_ADDON</code></td><td>新期間の開始日は明日以降である必要あり</td><td>締め日は本日より後にしてください。</td><td>ADD-04</td></tr>
